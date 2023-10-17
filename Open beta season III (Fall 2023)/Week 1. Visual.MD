@@ -12,7 +12,6 @@ https://learn.microsoft.com/es-es/dotnet/core/tools/dotnet-sln<br>
 https://github.com/itm4n/FullPowers<br>
 https://github.com/BeichenDream/GodPotato<br>
 <br>
-<br>
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
