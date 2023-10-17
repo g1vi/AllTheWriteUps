@@ -1,7 +1,5 @@
 # HTB - Visual
 ### TL;DR
-
-
 <br>
 <br>
 <br>
