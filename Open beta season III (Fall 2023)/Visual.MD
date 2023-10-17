@@ -35,4 +35,13 @@ PORT   STATE SERVICE VERSION
 
 Nmap done: 1 IP address (1 host up) scanned in 13.43 seconds
 ```
+So there is an Apache 2.4.56 web server running on port 80. We can inspect the site in firefox entering the url http://visual.htb
+
+
+
+
+
+
+
+
 
