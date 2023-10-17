@@ -1,8 +1,6 @@
 # HTB - Visual
 ### TL;DR
-<br>
-<br>
-<br>
+
 ### PHASE 1: Service enumeration
 Launch a port scan with `nmap`
 ```markdown
