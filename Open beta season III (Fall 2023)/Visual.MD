@@ -40,11 +40,9 @@ So there is an Apache 2.4.56 web server running on port 80. We can inspect the s
 ![visual1](https://github.com/g1vi/Write-up/assets/120142960/d6013b76-77ba-4f2a-8f0d-8338c2dd5560)
 
 Browsing the site with firefox, we find web app for compiling visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
-
-
-
-
-
+<br>
+<br>
+<br>
 ### PHASE 2: USER
 Let's begin preparing a local http git repo serving a visual studio solution. For this make a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
