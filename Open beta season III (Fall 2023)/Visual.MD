@@ -50,6 +50,7 @@ So there is an Apache 2.4.56 web server running on port 80. We inspect the site 
 ![visual1](https://github.com/g1vi/Write-up/assets/120142960/d6013b76-77ba-4f2a-8f0d-8338c2dd5560)
 <br>
 <br>
+<br>
 ### PHASE 2. User
 Our goal is to prepare a local http git repo serving a visual studio solution. For this, we start making a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
