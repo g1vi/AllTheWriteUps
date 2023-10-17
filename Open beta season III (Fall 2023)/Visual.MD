@@ -2,8 +2,9 @@
 
 ### TL;DR
 This is a Windows 2019 server machine running an Apache 2.4.56 server on port 80. A runnning web app recovers visual studio projects from external gits, compiles them and stores them in the server. The web application can be abused leveraging pre events on visual studio project files. Once inside the machine, we can move laterally to a local service user and restore its privileges with fullpowers.exe. Finally, system shell is obtained with god potato.<br>
-Keywords: git, visual studio, pre/post events, fullpowers.exe, god potato.<br>
-References:<br>
+__Keywords:__
+git, visual studio, pre/post events, fullpowers.exe, god potato.<br>
+__References:__<br>
 https://www.oreilly.com/library/view/version-control-with/9781449345037/ch04.html<br>
 https://learn.microsoft.com/es-es/dotnet/core/tools/dotnet-sln<br>
 https://github.com/itm4n/FullPowers<br>
