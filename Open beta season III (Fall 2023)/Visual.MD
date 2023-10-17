@@ -33,16 +33,13 @@ PORT   STATE SERVICE VERSION
 
 Nmap done: 1 IP address (1 host up) scanned in 13.43 seconds
 ```
-So there is an Apache 2.4.56 web server running on port 80. We can inspect the site in firefox entering the url http://visual.htb.
+So there is an Apache 2.4.56 web server running on port 80. We inspect the site with firefox entering the url http://visual.htb. Browsing the site, we find a web app which compiles and stores visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
 
 ![visual1](https://github.com/g1vi/Write-up/assets/120142960/d6013b76-77ba-4f2a-8f0d-8338c2dd5560)
-
-Browsing the site with firefox, we find web app for compiling visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
-<br>
 <br>
 <br>
 ### PHASE 2. User
-Let's begin preparing a local http git repo serving a visual studio solution. For this make a directory called `repo` and create a new visual studio solution called `repo.sln`
+Let's begin preparing a local http git repo serving a visual studio solution. For this, we start making a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
 mkdir repo
 
@@ -51,7 +48,7 @@ cd repo
 dotnet new sln -n repo
 The template "Solution File" was created successfully.
 ```
-From the `repo` directory, create a new project (a console c# app) called `myapp` from root directory
+From the `repo` directory, create a new project (specifically, a console c# app) called `myapp`
 ```markdown
 dotnet new console -o myapp
 The template "Console App" was created successfully.
@@ -61,12 +58,12 @@ Running 'dotnet restore' on /home/kali/htb/repo/myapp/myapp.csproj...
   Restored /home/kali/htb/repo/myapp/myapp.csproj (in 106 ms).
   Restore succeeded.
 ```
-This will generate a new folder called `myapp` containing a project file `myapp.csproj` and a c# source file `Program.cs`. Finally, add the c# project to the visual studio solution.
+This will generate a new folder called `myapp` containing a project file called `myapp.csproj` and a c# source file called `Program.cs`. Finally, we add the c# project to the visual studio solution.
 ```markdown
 dotnet sln repo.sln add myapp/myapp.csproj
 Project `myapp/myapp.csproj` added to the solution.
 ```
-Once visual studio part is finished, we need to create and run a git repository in the `repo` direcotry and serve it via http. For this, firstly initialize the git repo on directory `repo`
+Once visual studio part is finished, we need to initialize a git repository in the `repo` directory and serve it via http. For this, firstly initialize the git repo on directory `repo`
 ```markdown
 cd repo
 git init
@@ -166,7 +163,6 @@ git update-server-info
 python3 -m http.server 80
 ```
 Start another python http serving powercat.ps1 and start a listener on port 1919. Enter red box ip in the web app url box, after the c# files are pulled, a reverse shell is received on port 1919
-<br>
 <br>
 <br>
 ### PHASE 3. System
