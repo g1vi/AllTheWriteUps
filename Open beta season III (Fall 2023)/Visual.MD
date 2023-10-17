@@ -41,7 +41,7 @@ Browsing the site with firefox, we find web app for compiling visual studio proj
 <br>
 <br>
 <br>
-### 2. User
+### PHASE 2. User
 Let's begin preparing a local http git repo serving a visual studio solution. For this make a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
 mkdir repo
