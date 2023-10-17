@@ -33,7 +33,7 @@ PORT   STATE SERVICE VERSION
 
 Nmap done: 1 IP address (1 host up) scanned in 13.43 seconds
 ```
-So there is an Apache 2.4.56 web server running on port 80. We inspect the site with firefox entering the url http://visual.htb, and we find a web app which compiles and stores visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
+So there is an Apache 2.4.56 web server running on port 80. We inspect the site with firefox entering the url http://visual.htb, and we find a web app which compiles and stores visual studio projects. After supplying a git repo link, the app pulls the files, compiles the net 6.0 and c# projects and uploads them in the site.
 
 ![visual1](https://github.com/g1vi/Write-up/assets/120142960/d6013b76-77ba-4f2a-8f0d-8338c2dd5560)
 <br>
