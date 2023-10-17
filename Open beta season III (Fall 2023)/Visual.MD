@@ -42,9 +42,7 @@ So there is an Apache 2.4.56 web server running on port 80. We inspect the site 
 Our goal is to prepare a local http git repo serving a visual studio solution. For this, we start making a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
 > mkdir repo
-
 > cd repo
-
 > dotnet new sln -n repo
 The template "Solution File" was created successfully.
 ```
