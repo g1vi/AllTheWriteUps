@@ -2,9 +2,7 @@
 ### TL;DR
 
 
-<br>
-<br>
-<br>
+
 ### PHASE 1: SERVICE ENUMERATION
 Launch a port scan with `nmap`
 ```markdown
