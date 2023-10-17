@@ -2,7 +2,9 @@
 ### TL;DR
 
 
-
+<br>
+<br>
+<br>
 ### PHASE 1: SERVICE ENUMERATION
 Launch a port scan with `nmap`
 ```markdown
@@ -168,11 +170,9 @@ git update-server-info
 python3 -m http.server 80
 ```
 Start another python http serving powercat.ps1 and start a listener on port 1919. Enter red box ip in the web app url box, after the c# files are pulled, a reverse shell is received on port 1919
-
-
-
-
-
+<br>
+<br>
+<br>
 ### PHASE 3: SYSTEM
 
 
