@@ -1,5 +1,5 @@
 # HTB - Visual
-### TL:;DR
+### TL;DR
 
 
 
@@ -14,7 +14,7 @@ Host is up, received user-set (0.20s latency).
 Not shown: 65534 filtered tcp ports (no-response)
 Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
 PORT   STATE SERVICE REASON
-80/tcp open  http    syn-ack
+<b>80/tcp open  http    syn-ack</b>
 
 Nmap done: 1 IP address (1 host up) scanned in 495.11 seconds
 ```
