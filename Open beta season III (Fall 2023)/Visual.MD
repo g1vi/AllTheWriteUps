@@ -1,7 +1,7 @@
 # HTB - Visual
 ### TL;DR
 
-### 1.- Service enumeration
+### 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
 nmap $target -p- -T4 -Pn --open --reason
@@ -41,7 +41,7 @@ Browsing the site with firefox, we find web app for compiling visual studio proj
 <br>
 <br>
 <br>
-### PHASE 2: USER
+### 2. User
 Let's begin preparing a local http git repo serving a visual studio solution. For this make a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
 mkdir repo
@@ -169,7 +169,7 @@ Start another python http serving powercat.ps1 and start a listener on port 1919
 <br>
 <br>
 <br>
-### PHASE 3: SYSTEM
+### 3. System
 
 
 
