@@ -42,6 +42,9 @@ So there is an Apache 2.4.56 web server running on port 80. We can inspect the s
 Browsing the site with firefox, we find web app for compiling visual studio projects. After supplying a link to a git repo, the app compiles the net 6.0 and c# projects and uploads them in the site.
 
 
+
+
+
 ### PHASE 2: USER
 Let's begin preparing a local http git repo serving a visual studio solution. For this make a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
@@ -167,6 +170,10 @@ git update-server-info
 python3 -m http.server 80
 ```
 Start another python http serving powercat.ps1 and start a listener on port 1919. Enter red box ip in the web app url box, after the c# files are pulled, a reverse shell is received on port 1919
+
+
+
+
 
 ### PHASE 3: SYSTEM
 
