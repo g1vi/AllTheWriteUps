@@ -1,7 +1,7 @@
 # HTB - Visual
 ### TL;DR
 
-### PHASE 1: Service enumeration
+### 1.- Service enumeration
 Launch a port scan with `nmap`
 ```markdown
 nmap $target -p- -T4 -Pn --open --reason
