@@ -11,8 +11,9 @@ https://www.oreilly.com/library/view/version-control-with/9781449345037/ch04.htm
 https://learn.microsoft.com/es-es/dotnet/core/tools/dotnet-sln<br>
 https://github.com/itm4n/FullPowers<br>
 https://github.com/BeichenDream/GodPotato<br>
-
-
+<br>
+<br>
+<br>
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
@@ -171,6 +172,7 @@ After this, add again all files to git, commit, update server info and restart t
 > python3 -m http.server 80
 ```
 Start another python http serving `powercat.ps1` and start a listener. Enter red box ip in the web app url box, after the c# files are pulled and processed, a reverse shell is received on port 1919.
+<br>
 <br>
 <br>
 ### PHASE 3. System
