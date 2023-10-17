@@ -16,7 +16,7 @@ PORT   STATE SERVICE REASON
 
 Nmap done: 1 IP address (1 host up) scanned in 495.11 seconds
 ```
-Scan the open services found
+Scan the open services
 ```markdown
 nmap $target -p80 -sV -sC -Pn -v      
 Starting Nmap 7.93 ( https://nmap.org ) at 2023-10-02 06:53 EDT
