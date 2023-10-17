@@ -61,7 +61,7 @@ This will generate a new folder called `myapp` containing a project file called 
 > dotnet sln repo.sln add myapp/myapp.csproj
 Project `myapp/myapp.csproj` added to the solution.
 ```
-Once visual studio part is finished, we need to initialize a git repository in the `repo` directory and serve it via http. For this, firstly initialize the git repo on directory `repo`.
+Once visual studio part is finished, we need to initialize a git repository in the `repo` directory and serve it via http. For this, firstly initialize the git repo on directory `repo`
 ```markdown
 > cd repo
 > git init
@@ -108,8 +108,7 @@ Finally, move to .git directory and update server info.
 ```
 Now the git is ready to be served on http. We can test it, move to `.git` and serve the repo with a python http server. Then, in the web app, enter the local machine ip. Shortly after, the app starts downloading the c# files and uploading them into the server. Once they are conmplied, they are stored in a random folder and the app supplies the user with the resulting url.
 ```markdown
-> cd .git 
-                                                                                                                                 
+> cd .git                                                                                                                      
 > python3 -m http.server 80
 Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
 
