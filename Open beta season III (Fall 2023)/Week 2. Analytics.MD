@@ -57,7 +57,7 @@ ________________________________________________
 
 data                    [Status: 200, Size: 77883, Words: 3574, Lines: 28]
 ```
-Browsing the hidden subdomain at http//:data.analitycal.htb we find a login portal for a metabase service. Searching for metabase vulnerabilities we find out there is a vulnerability (https://www.cvedetails.com/cve/CVE-2023-38646) in the `/api/setup/validate` endpoint, which can lead to rce.
+Browsing the hidden subdomain at http://data.analitycal.htb we find a login portal for a metabase service. Searching for metabase vulnerabilities we find out there is a vulnerability (https://www.cvedetails.com/cve/CVE-2023-38646) in the `/api/setup/validate` endpoint, which can lead to rce.
 <br>
 <br>
 ### PHASE 2. User
