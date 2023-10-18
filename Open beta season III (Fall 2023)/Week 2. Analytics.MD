@@ -156,8 +156,7 @@ Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 6.2.0-25-generic x86_64)
 Last login: Sat Oct  7 23:19:29 2023 from 10.10.14.80
 metalytics@analytics:~$
 ```
-<br>
-<br>
+
 ### PHASE 3. System
 
 
