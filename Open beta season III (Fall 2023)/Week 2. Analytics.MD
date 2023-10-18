@@ -176,5 +176,5 @@ After running the exploit, a root shell spawns.
 > whoami
 root
 ```
-
+A root shell spawns.
 
