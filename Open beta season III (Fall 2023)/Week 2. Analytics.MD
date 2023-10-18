@@ -158,7 +158,7 @@ metalytics@analytics:~$
 ```
 <br>
 <br>
-### PHASE 3. System
+### PHASE 3. System<br>
 Now we have a full shell out of the container. Enumerate system again.
 ```markdown
 > uname -a && cat /proc/version
