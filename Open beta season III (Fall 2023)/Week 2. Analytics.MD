@@ -157,7 +157,6 @@ Last login: Sat Oct  7 23:19:29 2023 from 10.10.14.80
 metalytics@analytics:~$
 ```
 <br>
-<br>
 ### PHASE 3. System
 Now we have a full shell out of the container. Enumerate system again.
 ```markdown
