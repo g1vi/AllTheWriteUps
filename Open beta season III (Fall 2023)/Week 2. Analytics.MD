@@ -4,16 +4,15 @@
 This is an Ubuntu 22.04 host running an http server on port 80. The vulnerable web application running is metabase, and using the appropriate exploit rce can be gained. For escalation, a kernel vulnerability can be abused.
 
 __Keywords:__<br>
-metabase, GameOver(lay)
-<br>
+metabase, GameOver(lay)<br>
+
 __References:__<br>
-https://www.cvedetails.com/cve/CVE-2023-38646
-https://www.cvedetails.com/cve/CVE-2023-2640
-https://www.cvedetails.com/cve/CVE-2023-32629
-https://blog.assetnote.io/2023/07/22/pre-auth-rce-metabase/
-https://github.com/securezeron/CVE-2023-38646
-https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629
-<br>
+https://www.cvedetails.com/cve/CVE-2023-38646<br>
+https://www.cvedetails.com/cve/CVE-2023-2640<br>
+https://www.cvedetails.com/cve/CVE-2023-32629<br>
+https://blog.assetnote.io/2023/07/22/pre-auth-rce-metabase/<br>
+https://github.com/securezeron/CVE-2023-38646<br>
+https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629<br>
 <br>
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
