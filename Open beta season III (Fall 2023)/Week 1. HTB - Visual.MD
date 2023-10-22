@@ -45,8 +45,6 @@ PORT   STATE SERVICE VERSION
 Nmap done: 1 IP address (1 host up) scanned in 13.43 seconds
 ```
 So there is an Apache 2.4.56 web server running on port 80. We inspect the site with firefox entering the url http://visual.htb, and we find a web app which compiles and stores visual studio projects. After supplying a git repo link, the app pulls the files, compiles the net 6.0 and c# projects and uploads them in the site.
-
-![visual1](https://github.com/g1vi/Write-up/assets/120142960/d6013b76-77ba-4f2a-8f0d-8338c2dd5560)
 <br>
 <br>
 ### PHASE 2. User
@@ -140,9 +138,6 @@ Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
 ^C
 Keyboard interrupt received, exiting.
 ```
-
-![visual2](https://github.com/g1vi/Write-up/assets/120142960/30e914ad-fd62-4141-a0bb-3f3cb841d533)
-
 Once we are sure our git repo works, we have to find a way to make the server execute the code after compiling it. This can be done manipulating pre and post events in the c# `.csproj` project file. These events are triggered by the msbuild compiler before or after the compiling process ends. We will add a pre event, calling a powercat reverse shell before the building process begins. Just create any simple `Program.cs` source file and, in the `myapp.csproj` file, add the pre event.
 ```markdown
 <Project Sdk="Microsoft.NET.Sdk">
