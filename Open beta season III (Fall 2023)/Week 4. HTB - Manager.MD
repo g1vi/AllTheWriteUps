@@ -3,12 +3,10 @@
 ### TL;DR
 
 
-__Keywords:__<br>
-<br>
+**Keywords:**
 
-__References:__<br>
+**References:**
 
-<br>
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
