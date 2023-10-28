@@ -10,7 +10,7 @@ __References:__<br>
 
 <br>
 ### PHASE 1. Service enumeration
-Launch a port scan with `nmap`
+Launch a port scan.
 ```markdown
 > nmap $target -p- -T4 -Pn --open --reason
 Starting Nmap 7.93 ( https://nmap.org ) at 2023-10-21 16:51 EDT
