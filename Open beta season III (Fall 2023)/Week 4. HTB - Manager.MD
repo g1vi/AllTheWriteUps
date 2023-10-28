@@ -3,11 +3,10 @@
 ### TL;DR
 This is a Windows 2019 server machine configured as domain controller with a running mssql database. Using enabled guest sessions on smb shared, we can bruteforce the rid and get a list of domain users which allows us to bruteforce credentials for the mssql database. In the database, xp_dirtree is used to locate a backup of the database which contains credentials for winrm. For privesc, a misconfiguration on the manage CA permissions can be abused to create a new certificate for an administrator user.
 
-**Keywords:**
+**Keywords:**<br>
 rid bruteforce, mssql directory traversal with `xp_dirtree`, manageCA, pass the certificate, pass the ticket.
 
-**References:**
-
+**References:**<br>
 https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#attack-2
 https://www.thehacker.recipes/a-d/movement/kerberos/pass-the-certificate
 ### PHASE 1. Service enumeration
