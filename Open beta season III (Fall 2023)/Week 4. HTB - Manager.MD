@@ -7,6 +7,7 @@ This is a Windows 2019 server machine configured as domain controller with a run
 rid bruteforce, mssql directory traversal with `xp_dirtree`, manageCA, pass the certificate, pass the ticket.
 
 **References:**
+
 https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#attack-2
 https://www.thehacker.recipes/a-d/movement/kerberos/pass-the-certificate
 ### PHASE 1. Service enumeration
