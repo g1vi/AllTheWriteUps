@@ -43,7 +43,7 @@ Nmap done: 1 IP address (1 host up) scanned in 1379.15 seconds
 ```
 Enumerate open ports
 ```markdown
-nmap $target -p53,80,88,135,139,389,445,464,593,636,1433,3268,5985,9389 -sV -sC -Pn    
+> nmap $target -p53,80,88,135,139,389,445,464,593,636,1433,3268,5985,9389 -sV -sC -Pn
 Starting Nmap 7.93 ( https://nmap.org ) at 2023-10-21 17:29 EDT
 Nmap scan report for manager.htb (10.129.142.151)
 Host is up (0.13s latency).
@@ -115,8 +115,8 @@ smbmap -H <target ip> -u guest
   IPC$                          READ ONLY       Remote IPC
   NETLOGON                      NO ACCESS       Logon server share 
   SYSVOL                        NO ACCESS       Logon server share 
-```<br>
-<br>
+```
+The SMB share allows guest sessions; however, there are no shared folders available.
 ### PHASE 2. User
 Attempt a rid bruteforce.
 ```markdown
