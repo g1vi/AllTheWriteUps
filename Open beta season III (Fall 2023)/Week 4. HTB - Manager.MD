@@ -1,14 +1,6 @@
 # HTB - Manager
 
 ### TL;DR
-
-
-__Keywords:__<br>
-<br>
-
-__References:__<br>
-
-<br>
 ### PHASE 1. Service enumeration
 Launch a port scan.
 ```markdown
