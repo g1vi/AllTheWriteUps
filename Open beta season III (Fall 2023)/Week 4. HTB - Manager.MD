@@ -3,7 +3,7 @@
 ### TL;DR
 ### PHASE 1. Service enumeration
 Launch a port scan.
-```markdown
+```shell
 > nmap $target -p- -T4 -Pn --open --reason
 Starting Nmap 7.93 ( https://nmap.org ) at 2023-10-21 16:51 EDT
 Nmap scan report for manager.htb (10.129.142.151)
