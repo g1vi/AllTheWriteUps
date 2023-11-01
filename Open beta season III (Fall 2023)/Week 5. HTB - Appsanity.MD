@@ -124,7 +124,7 @@ Using this reverse shell we can get the user flag.
 ### PHASE 3: System
 Enumerate the user.
 ```markdown
-whoami
+> whoami
 appsanity\svc_exampanel
 ```
 Enumerate the system.
