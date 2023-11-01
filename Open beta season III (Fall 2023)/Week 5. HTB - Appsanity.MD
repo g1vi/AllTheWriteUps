@@ -1,13 +1,9 @@
 # HTB - Appsanity
 
 ### TL;DR
-
-
+This is a Windows 10 machine running a medical web application. Manipulating http requests we can get privileged access in the application and upload a malicious .aspx shell. To execute the shell, as ssrf attack is used. To escalate privileges, port forwarding and reversing of a local service are used.
 **Keywords:**<br>
-
-
-**References:**<br>
-
+file upload, ssrf, reversing, port forwarding
 ### PHASE 1. Service enumeration
 Launch a port scan with `nmap`
 ```markdown
@@ -79,7 +75,7 @@ Add this subdomain to hosts file and browse with firefox.
 
 ![appsanity1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/e5e6ec35-40bf-435f-bfc7-48745684bec8)
 
-Finally, we notice we cannot access the http 80 service externally. Take note of this because maybe this service maybe accessed internally later if we find a place to launch a ssrf attack.
+Also, we notice we cannot access the http 80 service externally. Take note of this because this service can maybe be accessed internally later if we find a place to launch a ssrf attack.
 
 ### PHASE 2: User
 Sign up to the site and create a new account and intercept the request. You can see there is a parameter called `AccType` set to "1". Manipulate it with burpsuite and set it to "2", forward the request until it completes successfully. Finally, log in using the recently created account and verify we have made ourselves a doctor account.
