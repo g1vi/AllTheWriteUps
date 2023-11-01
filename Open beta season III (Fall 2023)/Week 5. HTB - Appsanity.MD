@@ -2,6 +2,7 @@
 
 ### TL;DR
 This is a Windows 10 machine running a medical web application. Manipulating http requests we can get privileged access in the application and upload a malicious .aspx shell. To execute the shell, as ssrf attack is used. To escalate privileges, port forwarding and reversing of a local service are used.<br>
+
 **Keywords:**<br>
 file upload, ssrf, reversing, port forwarding
 ### PHASE 1. Service enumeration
