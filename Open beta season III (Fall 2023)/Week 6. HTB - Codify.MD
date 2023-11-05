@@ -1,7 +1,7 @@
 # HTB - Codify
 
 ### TL;DR
-This is an Ubuntu 22.04 machine running a web application created with vulnerable version of vm2 library. Exploiting the vulnerability, we get inital foothold and pivot to ssh user is gained through password hunting in the file system. Escalation is achieved exploiting vulnerability in local backup shell script generating our own custom exploit.
+This is an Ubuntu 22.04 machine running a web application created with vulnerable version of vm2 library. Exploiting the vulnerability, we get inital foothold, and pivot to ssh user is gained through password hunting in the file system. Escalation is achieved exploiting vulnerability in local backup shell script, for this purpose we generate our own custom exploit.
 
 **Keywords:**<br>
 node.js, vm2, python exploit scripting
