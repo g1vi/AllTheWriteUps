@@ -90,11 +90,10 @@ To find out more about the difference between single brackets and double bracket
 In summary, both conditions `[[$DB_PASS == Password123!]]` and `[[$DB_PASS == P* ]]` will be evaluated as true in the if statement.
 To brute force the password you can use 3 methods:
 1. Manually. Letter by letter, not recommended.
-2. Semi-manually. Create a file called `letter` containing all lower-case, upper-case and digits and bruteforce them using a loop. Add letters sequentially as you discover in each iteration. The first loop iteration would look like this:
+2. Semi-manually. Create a file called `letter` containing all lower-case, upper-case and digits and bruteforce them using a loop. As soon as you find a new character, add it to the for loop (e.g. `...echo abcde*...`) and repeat until no more letters are discovered. Add letters sequentially as you discover in each iteration. The first loop iteration would look like this:
 ```markdown
 > for i in $(cat letters);do echo a* | sudo /opt/scripts/mysql-backup.sh && echo "$i";done
 ```
-As soon as you find a new character, add it to the for loop (e.g. `...echo abcde*...`) and repeat until no more letters are discovered.<br>
 3. Using a python script. Elegant and fast. The machine also has perl installed. A proposed python script would be the following:
 ```python
 import string
