@@ -33,8 +33,8 @@ There are 2 web servers running. If you browse with firefox, you see they are ma
 
 For reverse shell, we'll focus on exploiting vm2 vulnerabilities.
 ### PHASE 2: User
-Searching for vm2 vulnerabilities, we came across this cve-2023-32314 (https://www.cvedetails.com/cve/CVE-2023-32314)
-A poc can be found in github: https://gist.github.com/arkark/e9f5cf5782dec8321095be3e52acf5ac
+Searching for vm2 vulnerabilities, we came across this cve-2023-32314 (https://www.cvedetails.com/cve/CVE-2023-32314)<br>
+A poc can be found in github: https://gist.github.com/arkark/e9f5cf5782dec8321095be3e52acf5ac<br>
 Running it in the application we have immediate code execution.
 
 ![codify1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/3106cd02-8828-48bb-9a51-9f36691a0b4d)
