@@ -7,7 +7,7 @@ This is an Ubuntu 22.04 machine running a web application created with vulnerabl
 node.js, vm2, python exploit scripting
 
 **References:**<br>
-https://www.cvedetails.com/cve/CVE-2023-32314
+https://www.cvedetails.com/cve/CVE-2023-32314<br>
 https://gist.github.com/arkark/e9f5cf5782dec8321095be3e52acf5ac
 https://www.baeldung.com/linux/bash-single-vs-double-brackets#4-pattern-matching
 ### PHASE 1. Service enumeration
