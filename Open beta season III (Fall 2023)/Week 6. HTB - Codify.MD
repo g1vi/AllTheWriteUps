@@ -56,7 +56,7 @@ Searching for interesting files in the file system, we came across this one `/va
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         username TEXT UNIQUE, 
         password TEXT
-��G�joshua**$2a$12$SOn8Pf6z8fO/nVsNbAAequ/P6vLRJJl7gCUEiYBU2iLHn4G/p/Zw2**
+��G�joshua$2a$12$SOn8Pf6z8fO/nVsNbAAequ/P6vLRJJl7gCUEiYBU2iLHn4G/p/Zw2
 ��
 ����ua  users
              ickets
@@ -83,15 +83,16 @@ It seems he can sudo run a backup script located at `/opt/scripts/mysql-backup.s
 
 ![codify4](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/5d9dc9ca-0f30-47fa-bcca-f403f554bed5)
 
-Using double brackets in the `if` comparison hypothetically allows us to use wildcards to guess the password, using a process similar to blind sql injections.
-To find out more about the difference between single brackets and double brackets read this: https://www.baeldung.com/linux/bash-single-vs-double-brackets#4-pattern-matching. In summary both conditions `[[$DB_PASS == Password123!]]` and `[[$DB_PASS == P* ]]` will be evaluated as true in the if statement.
+Using double brackets in the `if` comparison allows us to use wildcards to guess the password, using a process similar to blind sql injections.
+To find out more about the difference between single brackets and double brackets read this: https://www.baeldung.com/linux/bash-single-vs-double-brackets#4-pattern-matching
+In summary, both conditions `[[$DB_PASS == Password123!]]` and `[[$DB_PASS == P* ]]` will be evaluated as true in the if statement.
 To brute force the password you can use 3 methods:
 1. Manually. Letter by letter, not recommended.
 2. Semi-manually. Create a file called `letter` containing all lower-case, upper-case and digits and bruteforce them using a loop. Add letters sequentially as you discover in each iteration. The first loop iteration would look like this:
 ```markdown
->for i in $(cat letters);do echo a* | sudo /opt/scripts/mysql-backup.sh && echo "$i";done
+> for i in $(cat letters);do echo a* | sudo /opt/scripts/mysql-backup.sh && echo "$i";done
 ```
-As soon as you find a new character, add it to the for loop (e.g. `...echo abcde*...`) and repeat until no more letters are discovered.
+As soon as you find a new character, add it to the for loop (e.g. `...echo abcde*...`) and repeat until no more letters are discovered.<br>
 3. Using a python script. Elegant and fast. The machine also has perl installed. A proposed python script would be the following:
 ```python
 import string
