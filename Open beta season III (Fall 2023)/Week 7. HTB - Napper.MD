@@ -204,7 +204,8 @@ To verify if naplistener is running in the host, we send a base64 "aaa" payload 
 
 ![napper3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/1140e4eb-37fb-4e53-a586-589b630da358)
 
-If we send a base64-encoded c# reverse shell it will be decoded bay naplistener and executed. Download a c# tcp shell from http://www.revshells.com. Bear in mind it cannot be used off-the-self, it needs some modifications.
+We conclude if we send a base64-encoded c# reverse shell it will be decoded by naplistener and executed.
+Next step is to download a c# tcp shell from http://www.revshells.com. Bear in mind it cannot be used off-the-self, it needs some modifications.
 1. Namespace must match filename
 2. It must contain a `Run` class
 3. Create a constructor and place the shell code inside
