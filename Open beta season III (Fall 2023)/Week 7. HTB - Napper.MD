@@ -1,7 +1,7 @@
 # HTB - Napper
 
 ### TL;DR
-This is a Windows 10 pro workstation used by a group of malware researchers. For their investigations, they run a blog to post their findings and an internal elasticsearch server. They are currently researching the naplistener malware and it seems that, unfortunately, the software has infected the machine leaving it exposed to external attacks, this can be leveraged for user foothold. For privesc, the internal elasticsearch server needs to be attacked along with reversing in a local golang executable binary.
+This is a Windows 10 pro workstation used by a group of malware researchers. For their investigations, they run a blog to post their findings and an internal elasticsearch server. They are currently researching the naplistener malware and it seems that, unfortunately, the software has infected the machine leaving it exposed to external attacks, this can be leveraged for user foothold. For privesc, reversing a local binary written in golang allows finding credentials for local administrator.
 
 **Keywords:**<br>
 naplistener, c#, elasticsearch, reversing, golang, AES
