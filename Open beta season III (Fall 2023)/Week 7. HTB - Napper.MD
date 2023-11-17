@@ -1,4 +1,4 @@
-# HTB - Codify
+# HTB - Napper
 
 ### TL;DR
 This is a Windows 10 pro workstation used by a group of malware researchers. For their investigations, they run a blog to post their findings and an internal elasticsearch server. They are currently researching the naplistener malware and it seems that, unfortunately, the software has infected the machine leaving it exposed to external attacks, this can be leveraged for user foothold. For privesc, the internal elasticsearch server needs to be attacked along with reversing in a local golang executable binary.
@@ -157,7 +157,7 @@ Certificate:
          1e:2f:4c:01:e4:ce:25:57:c9:fa:28:ce:c5:af:3a:81:7c:fd:
          88:8c:2a:c2
 ```
-So there is a subdomain called `app.napper.htb`. We can further enumerate subdomains with `ffuf`
+So there is a subdomain called `app.napper.htb`. We can enumerate further subdomains with `ffuf`
 ```markdown
 > ffuf -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt --fs 5602 -t 100 -u https://napper.htb -H "Host: FUZZ.napper.htb"
 
@@ -196,11 +196,11 @@ Browsing the site we find the procedure they followed to configure the server, i
 
 ![napper2](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/8081003f-c577-4f92-aca7-8f8a9166966e)
 
-Trying these credentials (example:ExamplePassword) in the login page, we are given access to the internal area. Inside the restricted area we find out there is an investigation ongoing on a malware called naplistener. Doing a search in Internet, we find out 2 good resources to have an undertanding of this malware.
-https://www.elastic.co/security-labs/naplistener-more-bad-dreams-from-the-developers-of-siestagraph
-https://thehackernews.com/2023/03/new-naplistener-malware-used-by-ref2924.html
-In summary, it is a c# malware which starts an http listener in the infected machines. Once the listener is running, if you send base64 encoded c# payloads to certain endpoint, it will be executed in memory. It is designed to masquerade and evade network-based detection methods, for this same reason, it will only process requests sent to `/ews/MsExgHealthCheckd/`, in the `sdafwe3rwe23` parameter. Any other tries to interact with naplistener will be responded with a 404 code.
-To verify if naplistener is running in the host, we send a base64 "aaa" payload to the endpoint and it is respondeded with OK 200. Therefor, naplistener is running in the system.
+Trying these credentials (example:ExamplePassword) in the login page, we are given access to the internal area. Inside the restricted area we find out there is an investigation ongoing on a malware called naplistener. Doing a search in Internet, we find out 2 good resources to have an undertanding of this malware.<br>
+https://www.elastic.co/security-labs/naplistener-more-bad-dreams-from-the-developers-of-siestagraph<br>
+https://thehackernews.com/2023/03/new-naplistener-malware-used-by-ref2924.html<br>
+In summary, it is a malware written in c# which starts an http listener in the infected machines. Once the listener is running, if you send base64 encoded c# payloads to certain endpoint, it will be executed in memory. It is designed to masquerade and evade network-based detection methods, for this same reason, it will only process requests sent to `/ews/MsExgHealthCheckd/`, in the `sdafwe3rwe23` parameter. Any other tries to interact with naplistener will be responded with a 404 code.
+To verify if naplistener is running in the host, we send a base64 "aaa" payload to the endpoint and it is respondeded with OK 200. Therefore, naplistener is running in the system.
 
 ![napper3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/1140e4eb-37fb-4e53-a586-589b630da358)
 
