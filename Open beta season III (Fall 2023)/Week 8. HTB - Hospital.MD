@@ -1,7 +1,7 @@
 # HTB - Hospital
 
 ### TL;DR
-This is a Windows Server 2019 domain controller running a web server on ports 443 (xampp webmail) and another on port 8080 (apache). It is supposedly used by doctors in a hospital and a feature is enabled to upload medical records. This can be abused to upload a p0wny php shell and get access to a linux container runnig Ubuntu 22.04. Subsequently, this is be rooted using a kernel exploit. Once we have rooted the container, we get credentials for an email account from which we can launch a phising attack to get access to the Windows machine. Write permissions on the web root of the service running on port 443 allows us to upload a php reverse shell and get a system shell.
+This is a Windows Server 2019 domain controller running 2 web servers, one on port 443 (xampp webmail) and another on port 8080 (apache). It is supposedly used by doctors in a hospital and a feature is enabled to upload medical records. This can be abused to upload a p0wny php shell and get access to a linux container runnig Ubuntu 22.04. Subsequently, this is be rooted using a kernel exploit. Once we have rooted the container, we get credentials for an email account from which we can launch a phising attack to get access to the Windows machine. Write permissions on the web root of the service running on port 443 allows us to upload a php reverse shell and get a system shell.
 
 **Keywords:**<br>
 file upload, gameoverlay, phising, ghostscript.
