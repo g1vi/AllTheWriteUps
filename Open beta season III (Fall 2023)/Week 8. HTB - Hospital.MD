@@ -1,7 +1,7 @@
 # HTB - Hospital
 
 ### TL;DR
-This is a Windows Server 2019 domain controller running 2 web servers, one on port 443 (xampp webmail) and another on port 8080 (apache). It is supposedly used by doctors in a hospital and a feature is enabled to upload medical records. This can be abused to upload a p0wny php shell and get access to a linux container runnig Ubuntu 22.04. Subsequently, this is be rooted using a kernel exploit. Once we have rooted the container, we get credentials for an email account from which we can launch a phising attack to get access to the Windows machine. Write permissions on the web root of the service running on port 443 allows us to upload a php reverse shell and get a system shell.
+This is a Windows Server 2019 domain controller running 2 web servers, one on port 443 (xampp webmail) and another on port 8080 (apache). It is supposedly used by doctors in a hospital and a feature is enabled to upload medical records. This can be abused to upload a p0wny php shell and get access to a linux container runnig Ubuntu 22.04. Subsequently, this is rooted using a kernel exploit. Once we have rooted the container, we get credentials for an email account from which we can launch a phising attack to get access to the Windows machine. Write permissions on the 443 service web root allows us to upload a php reverse shell and get a system shell.
 
 **Keywords:**<br>
 file upload, gameoverlay, phising, ghostscript.
@@ -361,8 +361,8 @@ Browse the site http://hospital.htb site, register a new account and sign in. An
 
 ![hospital1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/e72cb32b-bff9-4799-af07-c6e719be738e)
 
-Several extensions are filtered. After some trial and error, we find out the extension `.phar` can be uploaded; however, standard `.php` shell (such as pentest-monkey-php) are not stable, the only php shell which is working is a p0wny shell (https://github.com/flozz/p0wny-shell).<br>
-To upload the shell, select an image file and intercept the message with burpsuite, then edit the request to add the p0wny shell code instead of the image binary code. The filter in place only checks the extension, and there is no magic bytes check, so there is no need to leave any jpg header and all the image code can be replaced by the php code. Finally, change the extension to `phar`
+Several extensions are filtered. After some trial and error, we find out the extension `.phar` is not filtered and can be uploaded; however, standard `.php` shell (such as pentest-monkey-php) are not stable, the only php shell which is working is a p0wny shell (https://github.com/flozz/p0wny-shell).<br>
+To upload the shell, select an image file and intercept the message with burpsuite, then edit the request to add the p0wny shell code instead of the image binary code. The filter in place only checks the extension, and there is no magic bytes check, so there is no need to leave any `.jpg` header and all the image code can be replaced by the php code. Finally, change the extension to `phar`
 
 ![hospital2](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/93cdd175-04c4-4807-a0b9-3feda1775082)
 
@@ -371,7 +371,7 @@ The the shell is uploaded in the `/uploads` folder.
 ![hospital3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/f64f11b4-8e22-49b3-99b7-1e0ec3d20016)
 
 It can be accessed in firefox in the URL http://hospital.htb:8080/uploads/shell.phar. A p0wny php shell is spawned which we can use to get a reverse shell on the host.<br>
-We receive a linux shell (probably a container), fisrt step is to enumerate the system info.
+From the shell (probably a container), enumerate the system info.
 ```markdwon
 uname -a
 Linux webserver 5.19.0-35-generic #36-Ubuntu SMP PREEMPT_DYNAMIC Fri Feb 3 18:36:56 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
@@ -384,7 +384,7 @@ Once the reverse shell is received, the container can be rooted with a kernel ex
 
 ![hospital5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/0a7b628e-afbc-4bb3-a348-43a1cdcb78bc)
 
-Once we are root we get the hashes from the `/etc/shadow` file, unshadow them and crack with `john`, then we get credentials for user `drwillams` in the container.
+Since we are now root we can dump the hashes from the `/etc/shadow` file, unshadow them and crack with `john`, then we get credentials for user `drwillams` in the container.
 
 ```markdown
 > unshadow passwd shadow > unshadowed
