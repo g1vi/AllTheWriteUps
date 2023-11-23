@@ -378,7 +378,7 @@ Linux webserver 5.19.0-35-generic #36-Ubuntu SMP PREEMPT_DYNAMIC Fri Feb 3 18:36
 ```
 Using the shell we find out `nc` is installed, so we can use it to get a reverse shell on the linux container.
 
-![hospital11](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/65563dc9-96da-4342-802c-2601a7b2095c)
+![hospital12](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/69a9d849-f4a6-4187-949d-7bc3188cb271)
 
 Once the reverse shell is received, the container can be rooted with a kernel exploit (https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629). 
 
