@@ -1,7 +1,7 @@
 # HTB - Devvortex
 
 ### TL;DR
-This is an Ubuntu machine running a web server created with a vulnerable version of the Joomla CMS. Using a github exploit we dump admin credentials for Joomla, which allows us to upload a PHP reverse shell. Once inside the box we find a local user blowfish hash in a local mysql database, which once cracked can be used for SSH access. For root, we abuse a vulnerable version of the `apport-cli` tool which the local user can run with `sudo`.
+This is an Ubuntu machine running a web server created with a vulnerable version of the Joomla CMS. Using a github exploit we dump admin credentials for Joomla, which allows us to upload a PHP reverse shell. Once inside the box, we retrieve a blowfish hash in an internal mysql database, which once cracked can be used for a local user SSH access. For root, we abuse a vulnerable version of the `apport-cli` tool which the local user can run with `sudo`.
 
 **Keywords:**<br>
 Joomla, blowfish, apport-cli
@@ -199,7 +199,7 @@ Select the "Cassiopeia" template and find a writable `.php` file (the `error.php
 ![devvortex4](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/f92444db-bfeb-4f5b-b55a-49cb46c43671)
 
 Save and close, the reverse shell is accessible on http://dev.devvortex.htb/templates/cassiopeia/error.php<br>
-Once the reverse shell is received, first step is to upgrade the shell to a tty, then enumerate users who have a configured shell in the `/etc/passwd` file.
+Once the reverse shell is received, first step is to upgrade the shell to a TTY with `python3`, then enumerate users who have a configured shell in the `/etc/passwd` file.
 ```markdown
 > cat /etc/passwd | grep bash
 
@@ -275,7 +275,7 @@ class JConfig {
         public $shared_session = false;
         public $session_metadata = true;
 ```
-This file contains credentials for user lewis in a mysql database. In fact, there is a local mysql server running internally on port 3306 which can be discovered with `netstat`.
+This file contains credentials for user lewis in a mysql database. In fact, there is a local mysql server running internally on port 3306 (it can be discovered with `netstat`).
 Connect to it using lewis' credentials.
 ```markdown
 > mysql -h localhost -u lewis -pP4ntherg0t1n5r3c0n##
@@ -298,9 +298,9 @@ logan's hash is blowfish type and can be cracked with `hashcat`
 
 ![devvortex5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/ebb1b687-abf2-436f-b4d3-6656d2e8cc1e)
 
-From the reverse shell you can `su logan` with cracked credentials and get user flag.
+From the reverse shell, just `su logan` with cracked credentials and get user flag.
 ### PHASE 3. System
-Begin starting an `ssh` shell for user logan.
+Begin from an `ssh` shell for user logan.
 ```markdown
 > ssh logan@devvortex.htb
 ```
@@ -316,8 +316,8 @@ User logan may run the following commands on devvortex:
     (ALL : ALL) /usr/bin/apport-cli
 ```
 Turns out logan can execute application `apport-cli` as root. Investigating this application, we find out it is used to inspect crash dump files.
-Looking for vulnerabilities, you can find this https://www.cvedetails.com/cve/CVE-2023-1326<br>
-It seems versions earlier than 2.26 use `less` as pager, and this can be exploited for privilege escalation if run under root, which is the case for user logan.
+Looking for vulnerabilities, we come accross this one https://www.cvedetails.com/cve/CVE-2023-1326<br>
+It seems versions earlier than 2.26 use `less` as pager, and this can be exploited for privilege escalation if run under root, which is the case for user logan.<br>
 Check which version of `apport-cli` is running.
 ```markdown
 > sudo /usr/bin/apport-cli -v
@@ -325,20 +325,20 @@ Check which version of `apport-cli` is running.
 2.20.11
 ```
 So it seems version installed is vulnerable. We just need run a `.crash` file long enough so the binary calls the pager when parsing it.
-Investigating ways to generate a crash in Ubuntu, we find 2 resources:
+Investigating ways to generate a crash in Ubuntu, we find 2 resources:<br>
 https://stackoverflow.com/questions/6152232/how-to-generate-core-dump-file-in-ubuntu<br>
 https://stackoverflow.com/questions/17965/how-to-generate-a-core-dump-in-linux-on-a-segmentation-fault<br>
-Following the instructions, let's first configure bash to save large dumps.
+Following the instructions, let's first configure `bash` to save large dumps.
 ```markdown
 > ulimit -c unlimited
 ```
-Then force a segmentation fault, the core will be dumped as a crash file.
+Then force a segmentation fault, so the core is dumped as a large crash file.
 ```markdown
 > sleep 10 &
 
 > killall -SIGSEGV sleep
 ```
-If everything went well (wrong, in fact), a message indicating the core dumped is shown, and a crash file should have been saved in the `/var/crash` directory.
+If everything went well (wrong, in fact), a message indicating the core has been dumped is shown, and a crash file should have been saved in the `/var/crash` directory.
 
 ![devvortex6](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/5d303061-e766-485f-85fb-e0a22ab5c669)
 
@@ -364,7 +364,7 @@ Please choose (S/V/K/I/C): v
 The collected information can be sent to the developers to improve the
 application. This might take a few minutes.
 ```
-Just enter `!sh` to interrupt the pager and make it open a shell. the spawned shell will be root shell since `apport-cli` was run with `sudo`.
+Just enter `!sh` to interrupt the pager and force it to open a shell. The spawned shell will be root shell since `apport-cli` was run with `sudo`.
 
 ![devvortex7](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/8e3a412b-2f43-4c9f-939e-b65b044466a5)
 
