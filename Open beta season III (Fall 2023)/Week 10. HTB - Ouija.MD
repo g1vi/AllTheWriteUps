@@ -1,7 +1,7 @@
 # HTB - Ouija
 
 ### TL;DR
-This is an insane machine running a web server behind a balancing haproxy v2.2.16. This is vulnerable to HTTP request smuggling, which can be abused to reach a subdomain and dump the code of another .js application running on port 3000. Analyzing this code we deduce how a superuser is formed. Using this information we launch a hash extension attack, which will allow us to forge a superuser token. Using this token we can query the API endpoint to dump the private key of the low-privileged user. This write-up contains steps to get user.txt only.
+This is an insane machine running a web server behind a balancing haproxy v2.2.16. This is vulnerable to HTTP request smuggling, which can be abused to reach a subdomain and dump the code of another .js application running on port 3000. Analyzing this code we deduce how a superuser is formed and using this information we launch a hash extension attack, which will allow us to forge a superuser token. Using this token we can query the API endpoint to dump the private key of the low-privileged user. This write-up only contains steps to get user.txt.
 
 **Keywords:**<br>
 HTTP request smuggling, SHA-256, hash_extender, API token
@@ -109,16 +109,16 @@ There is a web server running on port 80, and a subdomain running on http://dev.
 
 ![ouija1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/ed494b82-e786-4cd7-9ed3-391ca70b0505)
 
-Inspecting th source code in Firefox, we find another subdomain on http://gitea.ouija.htb
+Inspecting the source code in Firefox, we find another subdomain on http://gitea.ouija.htb
 
 ![ouija2](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/d4324a65-52cb-49c5-9da8-1f334c06951a)
 
-Browse the gitea server, register a new account and login in the server. List the instructions on how the ouija server has been setup. It uses an haproxy version 2.2.16.
+Browse the gitea server, register a new account and log in. List the instructions on how the ouija server has been set up. It uses an haproxy version 2.2.16.
 
 ![ouija3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/8da9fb15-017c-4520-9095-c2644fb22bd4)
 
 Finally, enumerate the API running on http://gitea.ouija.htb/api/swagger<br>
-Most of the endpoints require an authentication token. The endpoint /users/search can be queried without authentication to dump the username "leila".
+Most of the endpoints require an authentication token but the endpoint `/users/search` dumps the username `leila` without authentication.
 
 ![ouija4](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/5f8ddfee-2e85-48a2-857d-8810a0178a77)
 
@@ -128,10 +128,12 @@ Take note of this username and move forward.
 Looking for `haproxy 2.2.16` vulnerabilitites, we find out it is vulnerable to HTTP request smuggling <br>
 https://www.haproxy.com/blog/february-2023-header-parser-fixed<br>
 https://www.cvedetails.com/cve/CVE-2023-25725/<br>
+<br>
 There are good articles to investigate what HTTP request smuggling is.<br>
 https://medium.com/nerd-for-tech/http-request-smuggling-part-1-concepts-b89bfe17b210<br>
 https://medium.com/nerd-for-tech/http-request-smuggling-part-2-tl-ce-exploit-ec1171a88459<br>
-The `haproxy` runs in the `ouija.htb` server for traffic balancing purposes. We can abuse the HTTP CE.TE smuggling vulnerability to reach the http://dev.ouija.htb subdomain.
+<br>
+The `haproxy` runs in the `ouija.htb` server for traffic balancing purposes. We can abuse the HTTP CE.TE smuggling vulnerability to reach the `dev.ouija.htb` subdomain.
 Payloads can be smuggled with burpsuite, just deactivate the automatic update of the content length.
 
 ![ouija5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/111e9d48-de54-4aa1-b5ea-eb7c0e37eb11)
@@ -154,7 +156,7 @@ http://dev.ouija.htb/editor.php?file=init.sh<br>
 ![ouija6](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/42eb38e3-2789-4c80-b094-d618ab2ce845)
 
 Using the HTTP request smuggling we dump the contents of both files.
-Firstly, dump the contents of the init.sh file. We use the same payload, but updating the content-length to match the size of the request.
+Firstly, dump the contents of the `init.sh` file. We use the same payload, just update the `content-length` to match the size of the request.
 ```markdown
 POST /index.html HTTP/1.1
 Host: ouija.htb
@@ -168,7 +170,7 @@ Host: ouija.htb
 
 ![ouija7](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/f39b1033-e0fc-43ee-9f3f-daec56e660b1)
 
-The file init.sh contains a hash and a username.
+The file `init.sh` contains a hash and a username.
 ```markdown
 #!/bin/bash
 
@@ -278,11 +280,11 @@ app.get("/file/get",(q,r,n) => {
 app.get("/file/upload", (q,r,n) =>{r.json({"message":"Disabled for security reasons"});});
 app.get("/*", (q,r,n) => {r.json("200 not found , redirect to .");});
 ```
-The app running on port 3000 runs several APIs, we just need to focues on `/get/file` and `/users`. These endpoints use token authentication which is enforced in function `ensure_auth`. An user authenticates sending 2 headers: `ihash` and `identification`<br>
-The identification header is formed taking an username and appending certain string, then it is base64-encoded. Finally, a sha-256 hash is calculated on the resulting string using a secret key stored in env variable `k` for which we do not know this key or its length.<br>
+The app running on port 3000 runs several APIs, we just need to focus on `/get/file` and `/users`. These endpoints use token authentication which is enforced in function `ensure_auth`. An user authenticates sending 2 headers: `ihash` and `identification`<br>
+The identification header is formed taking an username and appending certain string, then it is base64-encoded. Finally, a sha-256 hash is calculated on the resulting string using a secret key stored in env variable `k`, but we do not know this key or its length.<br>
 The `ihash` header is a signature hash which will be compared to the resulting identification to verify user's identity.<br>
-If we remember, the `init.sh` file, we already know the value of the prepended data and the hash, so we we can launch a `hash_extender` attack (https://www.skullsecurity.org/2012/everything-you-need-to-know-about-hash-length-extension-attacks).
-Install the hash_extender tool from github https://github.com/iagox86/hash_extender<br>
+If we remember the `init.sh` file, we already know the value of the prepended data and the hash, so we we can launch a `hash_extender` attack (https://www.skullsecurity.org/2012/everything-you-need-to-know-about-hash-length-extension-attacks).<br>
+Install the `hash_extender` tool from github https://github.com/iagox86/hash_extender<br>
 ```markdown
 > git clone https://github.com/iagox86/hash_extender
 > cd hash_extender
@@ -311,7 +313,7 @@ New string: 626f74313a626f748000000000000000000000000000000000000000000000000000
 
 ![ouija9](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/40545b07-9a68-480c-83df-d046fc111c4c)
 
-So we have the `New signature` field `14be2f4a24f876a07a5570cc2567e18671b15e0e005ed92f10089533c1830c0b`, and the `strings` file containing the `New string` from size 1 to 47. We are ready to bruteforce the application, for this a small bash script is proposed.
+At this point we have the `New signature` field `14be2f4a24f876a07a5570cc2567e18671b15e0e005ed92f10089533c1830c0b`, and the `strings` file containing the `New string` from size 1 to 47. We are ready to bruteforce the application. For this, a small bash script is proposed.
 ```markdown
 #!/bin/bash
 
@@ -332,7 +334,7 @@ echo $token
 echo "[+] Length of token: "
 echo $token | wc -c
 ```
-Running it we find the authentication token, and its length (this is not the secret length).
+Running it we find the authentication token, and its length (note this is not the same as the secret length).
 
 ![ouija10](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/77d001a8-98d3-416b-9cd5-af6c40c4bd8e)
 
