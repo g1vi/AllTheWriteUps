@@ -189,7 +189,7 @@ Finally, just SSH in as `matthew`, using password `starcraft122490`
 ssh matthew@surveillance.htb
 ```
 
-PHASE 3: Root
+### PHASE 3: Root
 Begin from an SSH shell for user `matthew` and list local open connections.
 ```markdown
 netstat -lnput
