@@ -507,5 +507,5 @@ Now edit the `npcd` file contents and add command to send a reverse shell.
 ```
 Launch a listener on port 9001 and start the `npcd` service using the script, a root reverse shell is received.
 ```markdown
-> sudo /usr/local/nagiosxi/scripts/manage_services.sh stop npcd
+> sudo /usr/local/nagiosxi/scripts/manage_services.sh start npcd
 ```
