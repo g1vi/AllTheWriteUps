@@ -5,8 +5,10 @@ vAPI is Vulnerable Adversely Programmed Interface, a self-hostable API that mimi
 
 ### SETUP
 The lab used to solve the exercise is composed of an Ubuntu 22.04.2 LTS (Jammy Jellyfish) server (IP 10.1.1.11) hosting the vAPI application on port 8008, and a kali attacking machine (IP 10.1.1.22). The vAPI web site is available at http://10.1.1.11:8008, and the documentation at http://10.1.1.11:8008/vapi.
+
   
-![Untitled](https://github.com/g1vi/AllTheWriteUps/assets/120142960/74a2e15b-fc71-48f7-8284-f03f7bcbcdda)
+![Untitled](https://github.com/g1vi/AllTheWriteUps/assets/120142960/74a2e15b-fc71-48f7-8284-f03f7bcbcdda width="300" height="300")
+
   
 The exercise has been solved using Postman, `ffuf` and Burpsuite.
 
@@ -14,9 +16,9 @@ The exercise has been solved using Postman, `ffuf` and Burpsuite.
 Similar to IDOR in the web applications context, BOLA vulnerabilities are related to API endpoints that receives an ID of an object, and fail to validate if the user is authorized to access or to perform the requested action on the requested object.<br>
 <br>
 In Postman, create a new user `user8:password` by sending a POST request to `/vapi/api1/user`. The user ID is returned in case it is successfully created.
-<br>
+  
 ![Untitled1](https://github.com/g1vi/AllTheWriteUps/assets/120142960/cae3aecc-b34d-413f-948c-bbee79e0afbf)
-<br>
+  
 The user's data can be retrieved by sending a GET request with user ID and an authentication token. According to vAPI documentation, the authentication token is generated encoding base64 the string `username:password`<br>
 <br>
 In our case, the authentication token is:
@@ -25,9 +27,11 @@ In our case, the authentication token is:
 dXNlcjg6cGFzc3dvcmQ=
 ```
 Let's check if the authentication token works. Placing it in the request headers we successfully retrieve user details.
-<br>
+
+  
 ![Untitled2](https://github.com/g1vi/AllTheWriteUps/assets/120142960/85cdd65b-ceaf-474b-9286-79caf9aa806e)
-<br>
+\
+\
 As said before, the application would be vulnerable to BOLA if we could retrieve any user data just by changing the user ID. We verify that if we try querying user ID 1 we retrieve data for user Michael Scott.
 <br>
 ![Untitled3](https://github.com/g1vi/AllTheWriteUps/assets/120142960/3faac750-c35c-4301-b048-6e51cdd98709)
