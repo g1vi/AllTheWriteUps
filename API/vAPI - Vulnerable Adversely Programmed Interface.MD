@@ -5,9 +5,9 @@ vAPI is Vulnerable Adversely Programmed Interface, a self-hostable API that mimi
 
 ### SETUP
 The lab used to solve the exercise is composed of an Ubuntu 22.04.2 LTS (Jammy Jellyfish) server (IP 10.1.1.11) hosting the vAPI application on port 8008, and a kali attacking machine (IP 10.1.1.22). The vAPI web site is available at http://10.1.1.11:8008, and the documentation at http://10.1.1.11:8008/vapi.
-<br>
-![Untitled](https://github.com/g1vi/AllTheWriteUps/assets/120142960/74a2e15b-fc71-48f7-8284-f03f7bcbcdda)|300
-<br>
+  
+![Untitled](https://github.com/g1vi/AllTheWriteUps/assets/120142960/74a2e15b-fc71-48f7-8284-f03f7bcbcdda)
+  
 The exercise has been solved using Postman, `ffuf` and Burpsuite.
 
 ### API 1. BOLA (Broken Object Level Authentication)
