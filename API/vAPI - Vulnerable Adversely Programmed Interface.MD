@@ -133,9 +133,7 @@ There are 2 methods to discover the information leaked by the endpoint depending
 - If using Android-x86 + Virtual Box, Burpsuite cannot be configured as a proxy. The alternative is to discover the endpoint used by the android app to manage comments and interact directly with it.<br>
 <br>
 Since we are using Android-x86, we will follow the second option. For this, first discover hidden endpoints in API3.
-```markdown
-> ffuf -c -w /usr/share/seclists/SecLists-master/Discovery/Web-Content/api/objects.txt -t 100 -fc 500 -u http://10.1.1.11:8008/vapi/api3/FUZZ
-```
+
 Which discovers a hidden endpoint called `/vapi/api3/comment`
 \
 \
