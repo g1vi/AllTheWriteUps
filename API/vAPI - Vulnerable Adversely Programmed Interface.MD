@@ -131,8 +131,11 @@ Following the OWASP premises for this vulnerability, the API should be leaking u
 There are 2 methods to discover the information leaked by the endpoint depending on the Android virtual machine configuration used:
 - If you use Android Studio Android, it can be configured to use Burpsuite as a proxy. Add a comment and capture the HTTP response.
 - If using Android-x86 + Virtual Box, Burpsuite cannot be configured as a proxy. The alternative is to discover the endpoint used by the android app to manage comments and interact directly with it.<br>
-<br>
-Since we are using Android-x86, we will follow the second option. For this, we fuzz for hidden endpoints in API3 and discover a hidden endpoint called `/vapi/api3/comment`.
+
+Since we are using Android-x86, we will follow the second option. For this, we fuzz for hidden endpoints in API3 and discover a hidden endpoint called `/vapi/api3/comment`
+```markdown
+> ffuf -c -w /usr/share/seclists/SecLists-master/Discovery/Web-Content/api/objects.txt -t 100 -fc 500 -u http://10.1.1.11:8008/vapi/api3/FUZZ
+```
 \
 \
 ![Untitled10](https://github.com/g1vi/AllTheWriteUps/assets/120142960/43d5d99f-8e65-4a37-9000-45564af58038)
