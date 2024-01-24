@@ -202,7 +202,7 @@ https://thehackernews.com/2023/03/new-naplistener-malware-used-by-ref2924.html<b
 In summary, it is a malware written in c# which starts an http listener in the infected machines. Once the listener is running, if you send base64 encoded c# payloads to certain endpoint, it will be executed in memory. It is designed to masquerade and evade network-based detection methods, for this same reason, it will only process requests sent to `/ews/MsExgHealthCheckd/`, in the `sdafwe3rwe23` parameter. Any other tries to interact with naplistener will be responded with a 404 code.<br>
 To verify if naplistener is running in the host, we send a base64 "aaa" payload to the endpoint and it is respondeded with OK 200. Therefore, naplistener is running in the system.
 
-![napper3](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/1140e4eb-37fb-4e53-a586-589b630da358)
+![2024-01-24 19_24_19-kali linux 2021 2 (Snapshot 1)  Running  - Oracle VM VirtualBox](https://github.com/g1vi/AllTheWriteUps/assets/120142960/7fb5d7a4-c3c8-4de0-ba2f-a9d4bf24836f)
 
 We conclude if we send a base64-encoded c# reverse shell it will be decoded by naplistener and executed.
 Next step is to download a c# tcp shell from http://www.revshells.com. Bear in mind it cannot be used off-the-self, it needs some modifications.
@@ -299,7 +299,7 @@ Encode base64 the resulting binary.
 ```
 Send the payload with burpsuite, don't forget to URL-encode to avoid problematic characters.
 
-![napper4](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/1980268c-79fe-44aa-a94e-cba7f1d47d57)
+![2024-01-24 19_33_45-kali linux 2021 2 (Snapshot 1)  Running  - Oracle VM VirtualBox](https://github.com/g1vi/AllTheWriteUps/assets/120142960/a9c4a3bf-022c-46c1-858d-93a4eb3ba664)
 
 A reverse shell for user ruben is received.
 ### PHASE 3. System
