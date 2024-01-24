@@ -469,7 +469,7 @@ At this point we can consider enumeration finished as we have found everything w
 ### USER
 The employees login portal could be an entry point, but we need at least a list of valid usernames. Two options that come to mind to bruteforce usernames are asreproasting attack or a RID bruteforce. Since we do not have SMB credentials, we will opt for asreproasting.<br>
 <br>
-Two tools we can use to bruteforce usernames are `GetNPUsers.py` or `kerbrute`. In summary, both of send a TGT request with no-preauthentication and check the KDC reply. If the user exists, the KDC will prompt pre-authentication; if not, it will reply with an user not found message. Therefore, we can find out which usernames exist and which ones not.<br>
+Two tools we can use to bruteforce usernames are `GetNPUsers.py` or `kerbrute`. In summary, both of send a TGT request with no pre-authentication and check the KDC reply. If the user exists, the KDC will prompt pre-authentication; if not, it will reply with an user not found message. Therefore, we can find out which usernames exist and which ones not.<br>
 <br>
 With `GetNPUsers.py`, launch an asproasting attack and grep the results.
 ```markdown
@@ -552,11 +552,11 @@ Run the attack and verify the responses containing the word "technician" in the 
 
 ![Untitled10](https://github.com/g1vi/AllTheWriteUps/assets/120142960/401c96e6-703b-4b15-8928-5fe17f66a98f)
 
-We notice all the attributes found are common in Active Directory except for the attribute `description`. This is optional and normally is used by system admins to insert interesting stuff such as passwords.<br>
+We notice all the attributes found are common in Active Directory except for the attribute `description`. This is optional and somtimes is used by system admins to add addtional information such as passwords.<br>
 <br>
-To dump the contents of the tehnician attribute `description` we will user a blind LDAP injection attack (https://book.hacktricks.xyz/pentesting-web/ldap-injection#blind-ldap-injection). Iterating over ASCII characters, and knowing the OK/NOK criteria (in this case, whether the response contains the text "technician" or not), we can dump the contents of the filed. The method is similar to the process of a blind SQL injections.<br>
+To dump the contents of the tehnician attribute `description` we will use a blind LDAP injection attack (https://book.hacktricks.xyz/pentesting-web/ldap-injection#blind-ldap-injection). Iterating over ASCII characters, and knowing the OK/NOK criteria (in this case, whether the response contains the text "technician" or not), we can dump the field contents. The method is similar to the process of a blind SQL injection.<br>
 <br>
-The proposed blind LDAP injection script in Python to bruteforce the techinican 'description' field is the following:
+The proposed blind LDAP injection script in Python to bruteforce the techinican `description` field is the following:
 ```python
 #!/usr/bin/python3
 import requests
@@ -597,11 +597,11 @@ print("\n[+] Password found: ",password)
 ```
 There are 2 things to remark:
 * Since we are using wildcards in the pattern URL, we have to take into account the case an asterisk (*) is used in the middle of the password.
-* For the same reason, there will always be an asterisk at the end of the password found (a trailing character). Bear in mind to remove trailing characters must be removed at the end of the password before finishing the process.
+* For the same reason, there will always be an asterisk at the end of the password found (a trailing character). Bear in mind trailing characters must be removed at the end of the password before finishing the process.
 
 ![Untitled11](https://github.com/g1vi/AllTheWriteUps/assets/120142960/291101d9-2854-4d0c-845d-25e49d64c4a2)
 
-The contents stored in the `description` field looks like a password. Let's try credential `technician@analysis.htb:97NTtl*4QP96Bv` in the employees portal to login into the SOC dashboard.<br>
+The `description` field looks like a password. Let's try credential `technician@analysis.htb:97NTtl*4QP96Bv` in the employees portal to login into the SOC dashboard.<br>
 <br>
 
 ![Untitled12](https://github.com/g1vi/AllTheWriteUps/assets/120142960/26d88006-b2a5-4aea-a071-0123e96cc73e)
@@ -630,7 +630,7 @@ Which can be found in Kali location `/usr/share/webshells/php/simple-backdoor.ph
 
 ![Untitled13](https://github.com/g1vi/AllTheWriteUps/assets/120142960/c7a9daac-8b9c-4949-8f92-36ff5f71502f)
 
-In fact, the path is `/dashboard/uploads/simple.php`.<br>
+In fact, the upload path is `/dashboard/uploads/simple.php`<br>
 <br>
 Use this PHP shell to send a reverse shell to our Kali machine with `powercat`. Serve `powercat.ps1` with a Python HTTP server, then download and execute from memory using powershell `downloadstrings`. The payload to use is:
 ```markdown
@@ -715,13 +715,13 @@ Searching for Snort vulnerabilities we find a CVE and an associated POC here:<br
 https://www.cvedetails.com/cve/CVE-2016-1417<br>
 https://packetstormsecurity.com/files/138915/Snort-2.9.7.0-WIN32-DLL-Hijacking.html<br>
 <br>
-According to them, we are supposed to place in a remote shared folder a malicious `tcapi.dll` along with a `.pcap` capture file in the same folder. Then run Snort and let the application load the malicious DLL. This procedure has been tested and could not make it work.<br>
+According to them, to exploit the vulnerability we are supposed to place in a remote shared folder a malicious `tcapi.dll` along with a `.pcap` capture file in the same folder. Then run Snort and let the application load the malicious DLL. Unfortunately, this procedure was tested and did not work.<br>
 <br>
  Enumerating further in the Snort folder, we find a configuration file at  `bin\snort.conf` containing information about pre-processor libraries.
  
  ![Untitled16](https://github.com/g1vi/AllTheWriteUps/assets/120142960/a0b98275-d007-4934-91be-bca2c8f39e5e)
  
-In summary, it seems Snort load first dynamic DLL's located at the preprocessor path `c:\Snort\lib\snort_dynamicpreprocessor`.<br>
+In summary, it seems Snort load first dynamic DLL's located at the preprocessor path `c:\Snort\lib\snort_dynamicpreprocessor`<br>
 <br>
 Create an `msfvenom` payload for a malicious DLL called `sf_engine.dll` and copy to `c:\snort\lib\snort_dynamicpreprocessor`
 ```markdown
