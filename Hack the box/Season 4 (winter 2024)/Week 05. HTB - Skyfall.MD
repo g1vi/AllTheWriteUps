@@ -1,4 +1,4 @@
-# HTB - Pov
+# HTB - Skyfall
 
 ### TL;DR
 This is an Ubuntu 22.04.3 LTS machine which provides a MinIO-based cloud storage service. The MinIO root credentials are disclosed using 403 bypass technique and exploiting CVE-2023-28432. Once we have access to the MinIO storage we can download a file system backup which contains an HashiCorp Vault token. This will be used to get a one-time SSH password which will provide us a shell to get the user flag. Escalation is obtained by enumerating the `sudoers` configuration with `sudo -l` and abusing a rule which allows the low-priv user to unseal the HashiCorp Vault without a password.<br>
@@ -75,7 +75,7 @@ Following the indicated procedure for path fuzzing, first download an unicode wo
 <br>
 Trim the file to remove duplicate characters, resulting in a list of 1024 characters.
 ```markdwon
-> cat Unicode.txt | sed 's/.\{3\}$//' | sort -u > Unicode
+> cat Unicode.txt | sed 's/.\{3\}$//' | sort -u > unicode
 
 > head unicode
 %00
