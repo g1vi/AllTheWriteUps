@@ -593,7 +593,6 @@ not required on a system that users do not log into.
 To restore this content, you can run the 'unminimize' command.
 Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
 
-Last login: Mon Feb  5 10:54:14 2024 from 10.10.14.145
 root@skyfall:~# id
 uid=0(root) gid=0(root) groups=0(root)
 ```
