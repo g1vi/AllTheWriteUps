@@ -435,7 +435,8 @@ SMB         10.10.11.3      445    DC               [-] office\tstark:H0lOgrams4
 ```
 Log into the share using credentials. A `.pcap` file appears, download it.
 ```markdown
-smbclient \\\\office.htb\\'SOC Analysis' -U dwolfe%H0lOgrams4reTakIng0Ver754! 
+> smbclient \\\\office.htb\\'SOC Analysis' -U dwolfe%H0lOgrams4reTakIng0Ver754!
+
 Try "help" to get a list of possible commands.
 smb: \> dir
   .                                   D        0  Wed May 10 14:52:24 2023
@@ -554,7 +555,7 @@ Currently stored credentials:
 It seems credential for user `hhogan` is stored in the vault; however, you will not be able to use it with `runas` since it is protected by DPAPI.<br>
 <br>
 Before trying to decrypt the DPAPI secret, read this:<br>
-https://github.com/gentilkiwi/mimikatz/wiki/howto-~-scheduled-tasks-credentials
+https://github.com/gentilkiwi/mimikatz/wiki/howto-~-scheduled-tasks-credentials<br>
 https://github.com/gentilkiwi/mimikatz/wiki/howto-~-credential-manager-saved-credentials<br>
 <br>
 Now that we understand what is happening, let's follow GentilKiwi's procedure. First, look for the Windows credential files in the file system.
