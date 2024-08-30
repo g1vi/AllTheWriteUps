@@ -129,8 +129,7 @@ TEAMCITY_LOGS_PATH=/opt/teamcity/bin/../logs
 HOSTNAME=647a82f29ca0
 LANGUAGE=en_US:en
 JAVA_HOME=/opt/java/openjdk
-```diff
-+TEAMCITY_ENV=container
+*TEAMCITY_ENV=container*
 PWD=/
 TEAMCITY_LOGS=/opt/teamcity/logs
 TEAMCITY_RESTART_LOCK_FILE_PATH=/opt/teamcity/bin/../logs/teamcity.lock
