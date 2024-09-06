@@ -7,7 +7,7 @@ XSS, CVE-2023-24329, Python-URLlib 3.11, Hashcat mask attacks, Ghidra, reversing
 
 ### REFERENCES
 https://www.cvedetails.com/cve/CVE-2023-24329/<br>
-<br>
+
 ### ENUMERATION
 Port scan.
 ```markdown
