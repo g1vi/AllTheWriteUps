@@ -86,7 +86,7 @@ crm                     [Status: 200, Size: 6360, Words: 397, Lines: 150, Durati
 ```
 Add the found subdomain to hosts file and enumerate with Firefox.
 
-![Untitled1](https://github.com/user-attachments/assets/43c553c2-de11-4eac-819a-8dd53628870e)
+![Untitled8](https://github.com/user-attachments/assets/841ecda5-beb6-4700-ad14-3ce08fa785ad)
 
 A Dolibarr welcome page pops-up. This is an open source ERP and CRM for enterprises. The running version is 17.0.0.
 
