@@ -200,7 +200,7 @@ larissa:x:1000:1000:larissa,,,:/home/larissa:/bin/bash
 ```
 And verify we can use the password to open an SSH shell for as `larissa`
 
-![Untitled8](https://github.com/user-attachments/assets/fd6b55d7-de14-4c7f-b244-01d5c91b11af)
+![Untitled8](https://github.com/user-attachments/assets/841ecda5-beb6-4700-ad14-3ce08fa785ad)
 
 Which can be used to retrieve the user flag.
 
