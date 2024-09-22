@@ -52,7 +52,7 @@ Nmap done: 1 IP address (1 host up) scanned in 8.63 seconds
 ```
 Enumerate the web site with Firefox, take note of the domain name.
 
-![Untitled1](https://github.com/user-attachments/assets/43c553c2-de11-4eac-819a-8dd53628870e)
+![Untitled](https://github.com/user-attachments/assets/349c145b-41dc-44f8-ab10-606cd6144328)
 
 Add to hosts file and fuzz for subdomains.
 ```markdown
@@ -86,7 +86,7 @@ crm                     [Status: 200, Size: 6360, Words: 397, Lines: 150, Durati
 ```
 Add the found subdomain to hosts file and enumerate with Firefox.
 
-![Untitled8](https://github.com/user-attachments/assets/841ecda5-beb6-4700-ad14-3ce08fa785ad)
+![Untitled1](https://github.com/user-attachments/assets/43c553c2-de11-4eac-819a-8dd53628870e)
 
 A Dolibarr welcome page pops-up. This is an open source ERP and CRM for enterprises. The running version is 17.0.0.
 
@@ -200,7 +200,7 @@ larissa:x:1000:1000:larissa,,,:/home/larissa:/bin/bash
 ```
 And verify we can use the password to open an SSH shell for as `larissa`
 
-![Untitled](https://github.com/user-attachments/assets/349c145b-41dc-44f8-ab10-606cd6144328)
+![Untitled8](https://github.com/user-attachments/assets/fd6b55d7-de14-4c7f-b244-01d5c91b11af)
 
 Which can be used to retrieve the user flag.
 
