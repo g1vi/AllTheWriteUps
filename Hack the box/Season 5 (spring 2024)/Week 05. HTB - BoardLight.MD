@@ -52,7 +52,7 @@ Nmap done: 1 IP address (1 host up) scanned in 8.63 seconds
 ```
 Enumerate the web site with Firefox, take note of the domain name.
 
-![Untitled](https://github.com/user-attachments/assets/349c145b-41dc-44f8-ab10-606cd6144328)
+![Untitled1](https://github.com/user-attachments/assets/43c553c2-de11-4eac-819a-8dd53628870e)
 
 Add to hosts file and fuzz for subdomains.
 ```markdown
@@ -200,7 +200,7 @@ larissa:x:1000:1000:larissa,,,:/home/larissa:/bin/bash
 ```
 And verify we can use the password to open an SSH shell for as `larissa`
 
-![Untitled8](https://github.com/user-attachments/assets/bc588ca9-2344-4df3-b4ab-a1e0f17d5df9)
+![Untitled](https://github.com/user-attachments/assets/349c145b-41dc-44f8-ab10-606cd6144328)
 
 Which can be used to retrieve the user flag.
 
