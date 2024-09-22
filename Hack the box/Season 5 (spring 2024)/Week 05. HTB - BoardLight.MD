@@ -111,7 +111,7 @@ Add a PHP reverse shell, the filter is bypassed by replacing `<?php` with `<?PHP
 
 Click on "Save", a reverse shell for user `www-data` is received on port 1919.
 
-![Untitled8](https://github.com/user-attachments/assets/fd6b55d7-de14-4c7f-b244-01d5c91b11af)
+![Untitled8](https://github.com/user-attachments/assets/1a75b5e7-d98f-4fcc-9cfc-38eb06b5b00d)
 
 Shells for user `www-data` are limited; however, this user is usually allowed to read the `/var/www/html` directory, where we can harvest passwords.
 ```markdown
@@ -200,7 +200,7 @@ larissa:x:1000:1000:larissa,,,:/home/larissa:/bin/bash
 ```
 And verify we can use the password to open an SSH shell for as `larissa`
 
-![Untitled8](https://github.com/user-attachments/assets/841ecda5-beb6-4700-ad14-3ce08fa785ad)
+![Untitled777](https://github.com/user-attachments/assets/0a0e321a-c9e8-41a8-95f7-b9a69942e3da)
 
 Which can be used to retrieve the user flag.
 
