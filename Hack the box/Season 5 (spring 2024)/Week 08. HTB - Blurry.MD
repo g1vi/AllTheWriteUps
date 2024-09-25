@@ -132,15 +132,13 @@ BUG_REPORT_URL=https://bugs.debian.org/
 > whoami && id
 jippity
 uid=1000(jippity) gid=1000(jippity) groups=1000(jippity)
-# check sudo configuration
-sudo -l
-Matching Defaults entries for jippity on blurry:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
 ```
 User `jippity` may run the following `sudo` command on the host:
 ```markdown
 > sudo -l
-...
+Matching Defaults entries for jippity on blurry:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
     (root) NOPASSWD: /usr/bin/evaluate_model /models/*.pth
 ```
 Basically, the user is allowed to run `/usr/bin/evaluate_model` as root with the `.pth` files located in the `/models` directory. No password will be prompted.<br>
